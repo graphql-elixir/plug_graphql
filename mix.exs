@@ -30,6 +30,6 @@ defmodule PlugGraphql.Mixfile do
     [{:cowboy, "~> 1.0"},
      {:plug, "~> 0.14 or ~> 1.0"},
      {:poison, "~> 1.5"},
-     {:graphql, path: "../graphql-elixir"}]
+     {:graphql, "~> 0.0.4"}]
   end
 end
