@@ -3,10 +3,12 @@ defmodule PlugGraphql.Mixfile do
 
   def project do
     [app: :plug_graphql,
+     description: "A Phoenix Plug integration for the GraphQL package",
      version: "0.0.1",
      elixir: "~> 1.1",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     package: package,
      deps: deps]
   end
 
@@ -31,5 +33,12 @@ defmodule PlugGraphql.Mixfile do
      {:plug, "~> 0.14 or ~> 1.0"},
      {:poison, "~> 1.5"},
      {:graphql, "~> 0.0.4"}]
+  end
+
+  defp package do
+    [files: ["lib", "mix.exs", "README*", "LICENSE*"],
+     maintainers: ["Josh Price"],
+     licenses: ["BSD"],
+     links: %{"GitHub" => "https://github.com/joshprice/plug_graphql"}]
   end
 end
