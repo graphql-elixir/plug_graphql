@@ -8,19 +8,24 @@ defmodule GraphQL.Plug.GraphQLEndpoint do
     schema
   end
 
-  def call(%Conn{ method: "GET" } = conn, schema) do
-    query = "{greeting}"
-    result = GraphQL.execute(schema, query)
-    json = Poison.encode(result)
-    case json do
+  def call(%Conn{method: "GET", params: %{"query" => query}} = conn, schema) do
+    conn = put_resp_content_type(conn, "application/json")
+
+    case GraphQL.execute(schema, query) do
       {:ok, data} ->
-        conn
-        |> put_resp_content_type("application/json")
-        |> send_resp(200, data)
+        case Poison.encode(%{data: data}) do
+          {:ok, json} ->
+            send_resp(conn, 200, json)
+          {:error, errors} ->
+            send_resp(conn, 400, errors)
+        end
       {:error, errors} ->
-        conn
-        |> put_resp_content_type("application/json")
-        |> send_resp(500, "Error")
+        case Poison.encode(errors) do
+          {:ok, json} ->
+            send_resp(conn, 400, json)
+          {:error, errors} ->
+            send_resp(conn, 400, errors)
+        end
     end
   end
 
