@@ -9,7 +9,8 @@ defmodule PlugGraphql.Mixfile do
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      package: package,
-     deps: deps]
+     deps: deps,
+     docs: [extras: ["README.md"]]]
   end
 
   # Configuration for the OTP application
