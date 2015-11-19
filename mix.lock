@@ -1,0 +1,5 @@
+%{"cowboy": {:hex, :cowboy, "1.0.4"},
+  "cowlib": {:hex, :cowlib, "1.0.2"},
+  "plug": {:hex, :plug, "1.0.2"},
+  "poison": {:hex, :poison, "1.5.0"},
+  "ranch": {:hex, :ranch, "1.2.0"}}
