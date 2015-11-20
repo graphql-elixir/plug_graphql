@@ -5,7 +5,7 @@ defmodule PlugGraphql.Mixfile do
     [app: :plug_graphql,
      description: "A Phoenix Plug integration for the GraphQL package",
      version: "0.0.1",
-     elixir: "~> 1.1",
+     elixir: "~> 1.0",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      package: package,

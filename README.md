@@ -9,7 +9,7 @@ A Plug integration for the Elixir implementation of Facebook's GraphQL. Allows y
 
 The package can be installed as follows:
 
-  1. Add plug_graphql to your list of dependencies in `mix.exs`:
+1. Add `plug_graphql` to your list of dependencies in `mix.exs`:
 
   ```elixir
     def deps do
@@ -17,7 +17,7 @@ The package can be installed as follows:
     end
   ```
 
-  2. Ensure `plug_graphql` is started before your application:
+2. Ensure `plug_graphql` is started before your application:
 
   ```elixir
     def application do
@@ -25,7 +25,7 @@ The package can be installed as follows:
     end
   ```
 
-  3. Define a Schema
+3. Define a Schema
 
   ```elixir
     # The GraphQL schema we're going to use
@@ -50,7 +50,7 @@ The package can be installed as follows:
     end
   ```
 
-  4. Use the plug like so:
+4. Use the plug like so:
 
   ```elixir
     plug GraphQL.Plug.GraphQLEndpoint, TestSchema.schema
