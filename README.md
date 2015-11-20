@@ -86,8 +86,8 @@ You should see something like this:
 
 ```json
 {
-  data: {
-    greeting: "Hello, world!"
+  "data": {
+    "greeting": "Hello, world!"
   }
 }
 ```
