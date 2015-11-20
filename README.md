@@ -32,28 +32,28 @@ Then install the package
 
 Define a Schema
 
-  ```elixir
-    # The GraphQL schema we're going to use
-    defmodule TestSchema do
-      def schema do
-        %GraphQL.Schema{
-          query: %GraphQL.ObjectType{
-            name: "RootQueryType",
-            fields: [
-              %GraphQL.FieldDefinition{
-                name: "greeting",
-                type: "String",
-                resolve: &TestSchema.greeting/1,
-              }
-            ]
-          }
+```elixir
+  # The GraphQL schema we're going to use
+  defmodule TestSchema do
+    def schema do
+      %GraphQL.Schema{
+        query: %GraphQL.ObjectType{
+          name: "RootQueryType",
+          fields: [
+            %GraphQL.FieldDefinition{
+              name: "greeting",
+              type: "String",
+              resolve: &TestSchema.greeting/1,
+            }
+          ]
         }
-      end
-
-      def greeting(name: name), do: "Hello, #{name}!"
-      def greeting(_), do: greeting(name: "world")
+      }
     end
-  ```
+
+    def greeting(name: name), do: "Hello, #{name}!"
+    def greeting(_), do: greeting(name: "world")
+  end
+```
 
 Add the plug to your `api` pipeline:
 
@@ -91,3 +91,10 @@ You should see something like this:
   }
 }
 ```
+
+## Contributions
+
+This is pretty early days, the graphql execution engine needs a lot more work to be useful.
+
+However we can't get there without your help, so any questions, bug reports, feedback,
+feature requests and/or PRs are most welcome!
