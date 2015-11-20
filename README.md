@@ -9,49 +9,85 @@ A Plug integration for the Elixir implementation of Facebook's GraphQL. Allows y
 
 The package can be installed as follows:
 
-1. Add `plug_graphql` to your list of dependencies in `mix.exs`:
+Make a new Phoenix app
 
-  ```elixir
-    def deps do
-      [{:plug_graphql, "~> 0.0.1"}]
-    end
-  ```
+```sh
+  mix phoenix.new hello_graphql --no-ecto
+  cd hello_graphql
+```
 
-2. Ensure `plug_graphql` is started before your application:
+Add `plug_graphql` to your list of dependencies in `mix.exs`:
 
-  ```elixir
-    def application do
-      [applications: [:plug_graphql]]
-    end
-  ```
+```elixir
+  def deps do
+    [{:plug_graphql, "~> 0.0.1"}]
+  end
+```
 
-3. Define a Schema
+Then install the package
+
+```sh
+  mix deps.get
+```
+
+Define a Schema
 
   ```elixir
     # The GraphQL schema we're going to use
     defmodule TestSchema do
-     def schema do
-       %GraphQL.Schema{
-         query: %GraphQL.ObjectType{
-           name: "RootQueryType",
-           fields: [
-             %GraphQL.FieldDefinition{
-               name: "greeting",
-               type: "String",
-               resolve: &TestSchema.greeting/1,
-             }
-           ]
-         }
-       }
-     end
+      def schema do
+        %GraphQL.Schema{
+          query: %GraphQL.ObjectType{
+            name: "RootQueryType",
+            fields: [
+              %GraphQL.FieldDefinition{
+                name: "greeting",
+                type: "String",
+                resolve: &TestSchema.greeting/1,
+              }
+            ]
+          }
+        }
+      end
 
-     def greeting(name: name), do: "Hello, #{name}!"
-     def greeting(_), do: greeting(name: "world")
+      def greeting(name: name), do: "Hello, #{name}!"
+      def greeting(_), do: greeting(name: "world")
     end
   ```
 
-4. Use the plug like so:
+Add the plug to your `api` pipeline:
 
-  ```elixir
+```elixir
+  pipeline :api do
+    plug :accepts, ["json"]
+
     plug GraphQL.Plug.GraphQLEndpoint, TestSchema.schema
-  ```
+  end
+```
+
+And add an endpoint so this route fires
+
+```elixir
+  scope "/api", HelloGraphql do
+    pipe_through :api
+    get "/", PageController, :index
+  end
+```
+
+Start Phoenix
+
+    mix phoenix.server
+
+Open your browser and hit
+
+    http://localhost:4000/api?query={greeting}
+
+You should see something like this:
+
+```json
+{
+  data: {
+    greeting: "Hello, world!"
+  }
+}
+```
