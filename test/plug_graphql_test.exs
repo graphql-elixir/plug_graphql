@@ -35,8 +35,6 @@ defmodule PlugGraphqlTest do
   end
 
   def assert_response(conn, status, body) do
-    # Q: what can be passed in here instead of []?
-    # Q: how does schema get through? Is this Plug.Builder macro magic?
     conn = TestPlug.call conn, []
 
     assert conn.status == status
