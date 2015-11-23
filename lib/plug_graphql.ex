@@ -11,7 +11,7 @@ defmodule GraphQL.Plug.GraphQLEndpoint do
   def call(%Conn{method: req_method, params: %{"query" => query}} = conn, schema)
   when req_method in ["GET", "POST"] do
     cond do
-      query && query != "" -> handle_call(conn, schema, query)
+      query && String.strip(query) != "" -> handle_call(conn, schema, query)
       true -> handle_error(conn, "Must provide query string.")
     end
   end
@@ -49,7 +49,7 @@ defmodule GraphQL.Plug.GraphQLEndpoint do
         end
       {:error, errors} ->
         case Poison.encode(errors) do
-          {:ok, json} ->      send_resp(conn, 400, json)
+          {:ok, json}      -> send_resp(conn, 400, json)
           {:error, errors} -> send_resp(conn, 400, errors)
         end
     end
