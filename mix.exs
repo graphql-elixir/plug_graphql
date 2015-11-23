@@ -1,34 +1,27 @@
 defmodule PlugGraphql.Mixfile do
   use Mix.Project
 
+  @version "0.0.2"
+
+  @description "A Plug integration for the Elixir implementation of Facebook's GraphQL"
+  @repo_url "https://github.com/joshprice/plug_graphql"
+
   def project do
     [app: :plug_graphql,
-     description: "A Phoenix Plug integration for the GraphQL package",
-     version: "0.0.1",
+     description: @description,
+     version: @version,
      elixir: "~> 1.0",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      package: package,
      deps: deps,
-     docs: [extras: ["README.md"]]]
+     docs: [main: "README", extras: ["README.md"]]]
   end
 
-  # Configuration for the OTP application
-  #
-  # Type "mix help compile.app" for more information
   def application do
     [applications: [:logger, :plug, :cowboy]]
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:mydep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1.0"}
-  #
-  # Type "mix help deps" for more examples and options
   defp deps do
     [{:earmark, "~> 0.1", only: :dev},
      {:ex_doc, "~> 0.11", only: :dev},
@@ -39,9 +32,9 @@ defmodule PlugGraphql.Mixfile do
   end
 
   defp package do
-    [files: ["lib", "mix.exs", "README*", "LICENSE*"],
-     maintainers: ["Josh Price"],
+    [maintainers: ["Josh Price"],
      licenses: ["BSD"],
-     links: %{"GitHub" => "https://github.com/joshprice/plug_graphql"}]
+     links: %{"GitHub" => @repo_url},
+     files: ~w(lib mix.exs *.md LICENSE)]
   end
 end
