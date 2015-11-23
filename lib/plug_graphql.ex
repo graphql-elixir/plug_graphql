@@ -11,7 +11,7 @@ defmodule GraphQL.Plug.GraphQLEndpoint do
   def call(%Conn{method: req_method, params: %{"query" => query}} = conn, schema)
   when req_method in ["GET", "POST"] do
     cond do
-      query != "" -> handle_call(conn, schema, query)
+      query && query != "" -> handle_call(conn, schema, query)
       true -> handle_error(conn, "Must provide query string.")
     end
   end
