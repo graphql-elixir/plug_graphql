@@ -39,6 +39,7 @@ defmodule PlugGraphqlTest do
     assert conn.resp_body == String.strip """
       {"data":{"greeting":"Hello, world!"}}
     """
+    assert conn.halted == true
   end
 
   test "GET error" do
@@ -50,5 +51,30 @@ defmodule PlugGraphqlTest do
     assert conn.resp_body == String.strip """
       {"errors":[{"message":"GraphQL: syntax error before:  on line 1","line_number":1}]}
     """
+    assert conn.halted == true
+  end
+
+  test "POST query" do
+    conn = conn(:get, "/", query: "{greeting}")
+    |> TestPlug.call []
+
+    assert conn.status == 200
+    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
+    assert conn.resp_body == String.strip """
+      {"data":{"greeting":"Hello, world!"}}
+    """
+    assert conn.halted == true
+  end
+
+  test "POST error" do
+    conn = conn(:post, "/", query: "{")
+    |> TestPlug.call []
+
+    assert conn.status == 400
+    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
+    assert conn.resp_body == String.strip """
+      {"errors":[{"message":"GraphQL: syntax error before:  on line 1","line_number":1}]}
+    """
+    assert conn.halted == true
   end
 end
