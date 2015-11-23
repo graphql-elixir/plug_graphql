@@ -77,4 +77,40 @@ defmodule PlugGraphqlTest do
     """
     assert conn.halted == true
   end
+
+  test "PUT error" do
+    conn = conn(:put, "/", query: "{")
+    |> TestPlug.call []
+
+    assert conn.status == 400
+    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
+    assert conn.resp_body == String.strip """
+      {"errors":[{"message":"GraphQL only supports GET and POST requests."}]}
+    """
+    assert conn.halted == true
+  end
+
+  test "PATCH error" do
+    conn = conn(:patch, "/", query: "{")
+    |> TestPlug.call []
+
+    assert conn.status == 400
+    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
+    assert conn.resp_body == String.strip """
+      {"errors":[{"message":"GraphQL only supports GET and POST requests."}]}
+    """
+    assert conn.halted == true
+  end
+
+  test "DELETE error" do
+    conn = conn(:patch, "/", query: "{")
+    |> TestPlug.call []
+
+    assert conn.status == 400
+    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
+    assert conn.resp_body == String.strip """
+      {"errors":[{"message":"GraphQL only supports GET and POST requests."}]}
+    """
+    assert conn.halted == true
+  end
 end

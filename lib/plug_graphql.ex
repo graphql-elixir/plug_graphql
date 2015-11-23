@@ -8,18 +8,27 @@ defmodule GraphQL.Plug.GraphQLEndpoint do
     schema
   end
 
-  def call(%Conn{method: "GET", params: %{"query" => query}} = conn, schema) do
+  def call(%Conn{method: req_method, params: %{"query" => query}} = conn, schema)
+  when req_method in ["GET", "POST"] do
     handle_call(conn, schema, query)
   end
 
-  def call(%Conn{method: "POST", params: %{"query" => query}} = conn, schema) do
-    handle_call(conn, schema, query)
+  def call(%Conn{method: _} = conn, _) do
+    handle_error(conn)
   end
 
   defp handle_call(conn, schema, query) do
     conn
     |> put_resp_content_type("application/json")
     |> execute(schema, query)
+    |> halt
+  end
+
+  defp handle_error(conn) do
+    {:ok, errors} = Poison.encode %{errors: [%{message: "GraphQL only supports GET and POST requests."}]}
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(400, errors)
     |> halt
   end
 
