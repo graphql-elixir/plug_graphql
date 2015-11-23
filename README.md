@@ -20,7 +20,7 @@ Allows you to easily mount a GraphQL endpoint in Phoenix.
 
     ```elixir
     def deps do
-      [{:plug_graphql, "~> 0.0.2"}]
+      [{:plug_graphql, "~> 0.0.4"}]
     end
     ```
 
