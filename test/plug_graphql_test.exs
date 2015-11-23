@@ -42,6 +42,30 @@ defmodule PlugGraphqlTest do
     assert conn.halted == true
   end
 
+  test "GET no query" do
+    conn = conn(:get, "/")
+    |> TestPlug.call []
+
+    assert conn.status == 400
+    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
+    assert conn.resp_body == String.strip """
+      {"errors":[{"message":"Must provide query string."}]}
+    """
+    assert conn.halted == true
+  end
+
+  test "GET blank query" do
+    conn = conn(:get, "/", query: "")
+    |> TestPlug.call []
+
+    assert conn.status == 400
+    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
+    assert conn.resp_body == String.strip """
+      {"errors":[{"message":"Must provide query string."}]}
+    """
+    assert conn.halted == true
+  end
+
   test "GET error" do
     conn = conn(:get, "/", query: "{")
     |> TestPlug.call []
