@@ -1,4 +1,4 @@
-defmodule GraphQL.Plug.GraphQLEndpoint do
+defmodule GraphQL.Plug.Endpoint do
   import Plug.Conn
   alias Plug.Conn
 

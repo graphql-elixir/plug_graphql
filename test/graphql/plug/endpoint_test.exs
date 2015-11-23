@@ -1,4 +1,4 @@
-defmodule PlugGraphqlTest do
+defmodule GraphQL.Plug.EndpointTest do
   use ExUnit.Case, async: true
   use Plug.Test
 
@@ -27,7 +27,7 @@ defmodule PlugGraphqlTest do
   defmodule TestPlug do
     use Plug.Builder
 
-    plug GraphQL.Plug.GraphQLEndpoint, TestSchema.schema
+    plug GraphQL.Plug.Endpoint, TestSchema.schema
   end
 
   def assert_query({method, path, params}, {status, body}) do
