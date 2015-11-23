@@ -30,135 +30,51 @@ defmodule PlugGraphqlTest do
     plug GraphQL.Plug.GraphQLEndpoint, TestSchema.schema
   end
 
-  test "GET query" do
-    conn = conn(:get, "/", query: "{greeting}")
-    |> TestPlug.call [] # Q: what can be passed in here instead of []? how does schema get through? is this Plug.Builder macro magic?
+  def assert_query({method, path, params}, {status, body}) do
+    assert_response conn(method, path, params), status, body
+  end
 
-    assert conn.status == 200
+  def assert_response(conn, status, body) do
+    # Q: what can be passed in here instead of []?
+    # Q: how does schema get through? Is this Plug.Builder macro magic?
+    conn = TestPlug.call conn, []
+
+    assert conn.status == status
     assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
-    assert conn.resp_body == String.strip """
-      {"data":{"greeting":"Hello, world!"}}
-    """
+    assert conn.resp_body == String.strip(body)
     assert conn.halted == true
   end
 
-  test "GET no query" do
-    conn = conn(:get, "/")
-    |> TestPlug.call []
-
-    assert conn.status == 400
-    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
-    assert conn.resp_body == String.strip """
-      {"errors":[{"message":"Must provide query string."}]}
-    """
-    assert conn.halted == true
+  test "GET and POST successful query" do
+    success = ~S({"data":{"greeting":"Hello, world!"}})
+    assert_query {:get,  "/", query: "{greeting}"}, {200, success}
+    assert_query {:post, "/", query: "{greeting}"}, {200, success}
   end
 
-  test "GET blank query" do
-    conn = conn(:get, "/", query: "")
-    |> TestPlug.call []
-
-    assert conn.status == 400
-    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
-    assert conn.resp_body == String.strip """
-      {"errors":[{"message":"Must provide query string."}]}
-    """
-    assert conn.halted == true
+  test "missing query" do
+    no_query_found_error = ~S({"errors":[{"message":"Must provide query string."}]})
+    assert_query {:get,  "/", nil},         {400, no_query_found_error}
+    assert_query {:get,  "/", query: nil},  {400, no_query_found_error}
+    assert_query {:get,  "/", query: ""},   {400, no_query_found_error}
+    assert_query {:get,  "/", query: "  "}, {400, no_query_found_error}
+    assert_query {:post, "/", nil},         {400, no_query_found_error}
+    assert_query {:post, "/", query: nil},  {400, no_query_found_error}
+    assert_query {:post, "/", query: ""},   {400, no_query_found_error}
+    assert_query {:post, "/", query: "  "}, {400, no_query_found_error}
   end
 
-  test "GET spaces only query" do
-    conn = conn(:get, "/", query: "    ")
-    |> TestPlug.call []
-
-    assert conn.status == 400
-    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
-    assert conn.resp_body == String.strip """
-      {"errors":[{"message":"Must provide query string."}]}
-    """
-    assert conn.halted == true
+  test "invalid query error" do
+    syntax_error = ~S({"errors":[{"message":"GraphQL: syntax error before:  on line 1","line_number":1}]})
+    assert_query {:get,  "/", query: "{"}, {400, syntax_error}
+    assert_query {:post, "/", query: "{"}, {400, syntax_error}
   end
 
-  test "GET empty query" do
-    conn = conn(:get, "/", query: nil)
-    |> TestPlug.call []
-
-    assert conn.status == 400
-    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
-    assert conn.resp_body == String.strip """
-      {"errors":[{"message":"Must provide query string."}]}
-    """
-    assert conn.halted == true
-  end
-
-  test "GET error" do
-    conn = conn(:get, "/", query: "{")
-    |> TestPlug.call []
-
-    assert conn.status == 400
-    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
-    assert conn.resp_body == String.strip """
-      {"errors":[{"message":"GraphQL: syntax error before:  on line 1","line_number":1}]}
-    """
-    assert conn.halted == true
-  end
-
-  test "POST query" do
-    conn = conn(:get, "/", query: "{greeting}")
-    |> TestPlug.call []
-
-    assert conn.status == 200
-    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
-    assert conn.resp_body == String.strip """
-      {"data":{"greeting":"Hello, world!"}}
-    """
-    assert conn.halted == true
-  end
-
-  test "POST error" do
-    conn = conn(:post, "/", query: "{")
-    |> TestPlug.call []
-
-    assert conn.status == 400
-    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
-    assert conn.resp_body == String.strip """
-      {"errors":[{"message":"GraphQL: syntax error before:  on line 1","line_number":1}]}
-    """
-    assert conn.halted == true
-  end
-
-  test "PUT error" do
-    conn = conn(:put, "/", query: "{")
-    |> TestPlug.call []
-
-    assert conn.status == 400
-    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
-    assert conn.resp_body == String.strip """
-      {"errors":[{"message":"GraphQL only supports GET and POST requests."}]}
-    """
-    assert conn.halted == true
-  end
-
-  test "PATCH error" do
-    conn = conn(:patch, "/", query: "{")
-    |> TestPlug.call []
-
-    assert conn.status == 400
-    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
-    assert conn.resp_body == String.strip """
-      {"errors":[{"message":"GraphQL only supports GET and POST requests."}]}
-    """
-    assert conn.halted == true
-  end
-
-  test "DELETE error" do
-    conn = conn(:patch, "/", query: "{")
-    |> TestPlug.call []
-
-    assert conn.status == 400
-    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
-    assert conn.resp_body == String.strip """
-      {"errors":[{"message":"GraphQL only supports GET and POST requests."}]}
-    """
-    assert conn.halted == true
+  test "invalid http verbs" do
+    invalid_verb_error = ~S({"errors":[{"message":"GraphQL only supports GET and POST requests."}]})
+    assert_query {:put,     "/", query: "{greeting}"}, {400, invalid_verb_error}
+    # assert_query {:head,    "/", query: "{greeting}"}, {400, invalid_verb_error}
+    assert_query {:patch,   "/", query: "{greeting}"}, {400, invalid_verb_error}
+    assert_query {:delete,  "/", query: "{greeting}"}, {400, invalid_verb_error}
+    assert_query {:options, "/", query: "{greeting}"}, {400, invalid_verb_error}
   end
 end
