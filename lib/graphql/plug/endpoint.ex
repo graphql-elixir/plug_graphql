@@ -4,12 +4,13 @@ defmodule GraphQL.Plug.Endpoint do
 
   @behaviour Plug
 
-  def init(schema) do
-    schema
+  def init(opts) do
+    opts
   end
 
-  def call(%Conn{method: req_method, params: %{"query" => query}} = conn, schema)
+  def call(%Conn{method: req_method, params: %{"query" => query}} = conn, opts)
   when req_method in ["GET", "POST"] do
+    schema = opts[:schema]
     cond do
       query && String.strip(query) != "" -> handle_call(conn, schema, query)
       true -> handle_error(conn, "Must provide query string.")

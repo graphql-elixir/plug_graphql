@@ -57,7 +57,7 @@ Allows you to easily mount a GraphQL endpoint in Phoenix.
     pipeline :api do
       plug :accepts, ["json"]
 
-      plug GraphQL.Plug.Endpoint, TestSchema.schema
+      plug GraphQL.Plug.Endpoint, schema: TestSchema.schema
     end
     ```
 

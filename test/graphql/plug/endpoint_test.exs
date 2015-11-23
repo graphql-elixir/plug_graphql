@@ -27,7 +27,7 @@ defmodule GraphQL.Plug.EndpointTest do
   defmodule TestPlug do
     use Plug.Builder
 
-    plug GraphQL.Plug.Endpoint, TestSchema.schema
+    plug GraphQL.Plug.Endpoint, schema: TestSchema.schema
   end
 
   def assert_query({method, path, params}, {status, body}) do
@@ -39,7 +39,7 @@ defmodule GraphQL.Plug.EndpointTest do
 
     assert conn.status == status
     assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
-    assert conn.resp_body == String.strip(body)
+    assert conn.resp_body == body
     assert conn.halted == true
   end
 
