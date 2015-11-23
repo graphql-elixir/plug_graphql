@@ -23,8 +23,8 @@ defmodule PlugGraphql.Mixfile do
   end
 
   defp deps do
-    [{:earmark, "~> 0.1", only: :dev},
-     {:ex_doc, "~> 0.11", only: :dev},
+    [{:earmark, "~> 0.1", only: :docs},
+     {:ex_doc, "~> 0.11", only: :docs},
      {:cowboy, "~> 1.0"},
      {:plug, "~> 0.14 or ~> 1.0"},
      {:poison, "~> 1.5"},
