@@ -72,9 +72,9 @@ defmodule PlugGraphqlTest do
   test "invalid http verbs" do
     invalid_verb_error = ~S({"errors":[{"message":"GraphQL only supports GET and POST requests."}]})
     assert_query {:put,     "/", query: "{greeting}"}, {400, invalid_verb_error}
-    # assert_query {:head,    "/", query: "{greeting}"}, {400, invalid_verb_error}
     assert_query {:patch,   "/", query: "{greeting}"}, {400, invalid_verb_error}
     assert_query {:delete,  "/", query: "{greeting}"}, {400, invalid_verb_error}
     assert_query {:options, "/", query: "{greeting}"}, {400, invalid_verb_error}
+    assert_query {:head,    "/", query: "{greeting}"}, {400, ""}
   end
 end
