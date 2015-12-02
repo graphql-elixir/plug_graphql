@@ -30,7 +30,7 @@ defmodule GraphQL.Plug.Endpoint do
     conn
     |> put_resp_content_type("application/json")
     |> execute(schema, query)
-    |> halt
+    # |> halt
   end
 
   defp handle_error(conn, message) do
@@ -38,7 +38,7 @@ defmodule GraphQL.Plug.Endpoint do
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(400, errors)
-    |> halt
+    # |> halt
   end
 
   defp execute(conn, schema, query) do
