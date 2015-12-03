@@ -35,19 +35,18 @@ Allows you to easily mount a GraphQL endpoint in Phoenix.
         %GraphQL.Schema{
           query: %GraphQL.ObjectType{
             name: "RootQueryType",
-            fields: [
-              %GraphQL.FieldDefinition{
-                name: "greeting",
+            fields: %{
+              greeting: %GraphQL.FieldDefinition{
                 type: "String",
-                resolve: &TestSchema.greeting/1,
+                resolve: &TestSchema.greeting/3
               }
-            ]
+            }
           }
         }
       end
 
-      def greeting(name: name), do: "Hello, #{name}!"
-      def greeting(_), do: greeting(name: "world")
+      def greeting(_, %{name: name}, _), do: "Hello, #{name}!"
+      def greeting(_, _, _), do: "Hello, world!"
     end
     ```
 
