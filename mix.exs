@@ -15,7 +15,7 @@ defmodule PlugGraphql.Mixfile do
      start_permanent: Mix.env == :prod,
      package: package,
      deps: deps,
-     docs: [main: "README", extras: ["README.md"]]]
+     docs: [main: "readme", extras: ["README.md"]]]
   end
 
   def application do

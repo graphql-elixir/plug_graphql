@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/joshprice/plug_graphql.svg)](https://travis-ci.org/joshprice/plug_graphql)
 [![Public Slack Discussion](https://graphql-slack.herokuapp.com/badge.svg)](https://graphql-slack.herokuapp.com/)
 
-`graphql_plug` is a Plug integration for the [GraphQL Elixir](https://github.com/joshprice/graphql-elixir) implementation of Facebook's GraphQL.
+`plug_graphql` is a Plug integration for the [GraphQL Elixir](https://github.com/joshprice/graphql-elixir) implementation of Facebook's GraphQL.
 
 Allows you to easily mount a GraphQL endpoint in Phoenix.
 
