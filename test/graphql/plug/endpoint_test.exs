@@ -22,7 +22,6 @@ defmodule GraphQL.Plug.EndpointTest do
     def greeting(_, _, _), do: greeting(%{}, %{name: "world"}, %{})
   end
 
-  # Setup a Plug which calls the Plug under test
   defmodule TestPlug do
     use Plug.Builder
 
@@ -39,13 +38,26 @@ defmodule GraphQL.Plug.EndpointTest do
     assert conn.status == status
     assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
     assert conn.resp_body == body
-    # assert conn.halted == true
   end
 
   test "GET and POST successful query" do
     success = ~S({"data":{"greeting":"Hello, world!"}})
     assert_query {:get,  "/", query: "{greeting}"}, {200, success}
     assert_query {:post, "/", query: "{greeting}"}, {200, success}
+  end
+
+  test "specify schema using {module, fun} syntax" do
+    defmodule TestMFPlug do
+      use Plug.Builder
+
+      plug GraphQL.Plug.Endpoint, schema: {TestSchema, :schema}
+    end
+    conn = conn(:get, "/", query: "{greeting}")
+    conn = TestMFPlug.call conn, []
+
+    assert conn.status == 200
+    assert get_resp_header(conn, "content-type") == ["application/json; charset=utf-8"]
+    assert conn.resp_body == ~S({"data":{"greeting":"Hello, world!"}})
   end
 
   test "missing query" do
