@@ -9,11 +9,17 @@ Allows you to easily mount a GraphQL endpoint in Phoenix.
 
 ## Installation
 
-  1. Make a new Phoenix app
+  1. Make a new Phoenix app, or add it to your existing app.
 
     ```sh
     mix phoenix.new hello_graphql --no-ecto
     cd hello_graphql
+    ```
+
+    Alternatively you could clone the [Phoenix GraphQL example project](https://github.com/joshprice/hello_graphql_phoenix) repo
+
+    ```sh
+    git clone https://github.com/joshprice/hello_graphql_phoenix
     ```
 
   2. Add `plug_graphql` to your list of dependencies in `mix.exs` and install the package with `mix deps.get`.
@@ -26,10 +32,9 @@ Allows you to easily mount a GraphQL endpoint in Phoenix.
 
 ## Usage
 
-  1. Define a Schema. Here's a simple one to try out:
+  1. Define a simple schema in `web/graphql/test_schema.ex`:
 
     ```elixir
-    # The GraphQL schema we're going to use
     defmodule TestSchema do
       def schema do
         %GraphQL.Schema{
@@ -50,22 +55,21 @@ Allows you to easily mount a GraphQL endpoint in Phoenix.
     end
     ```
 
-  2. Add the plug to your `api` pipeline:
+  2. Your `api` pipeline should have this as a minimum:
 
     ```elixir
     pipeline :api do
       plug :accepts, ["json"]
-
-      plug GraphQL.Plug.Endpoint, schema: TestSchema.schema
     end
     ```
 
-  3. Add an endpoint so this route fires
+  3. Mount the GraphQL endpoint as follows:
 
     ```elixir
-    scope "/api", HelloGraphql do
+    scope "/api" do
       pipe_through :api
-      get "/", PageController, :index
+
+      forward "/", GraphQL.Plug.Endpoint, schema: {TestSchema, :schema}
     end
     ```
 
@@ -91,3 +95,12 @@ This is pretty early days, the graphql execution engine needs a lot more work to
 
 However we can't get there without your help, so any questions, bug reports, feedback,
 feature requests and/or PRs are most welcome!
+
+## Acknowledgements
+
+Thanks and appreciation goes to the following contributors for answering many questions and providing helpful feedback:
+
+* Daniel Neighman (https://github.com/hassox)
+* Chris McCord (https://github.com/chrismccord)
+
+Thanks also to everyone who has submitted PRs, logged issues, given feedback or asked questions.
