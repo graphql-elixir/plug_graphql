@@ -41,7 +41,7 @@ Allows you to easily mount a GraphQL endpoint in Phoenix.
           query: %GraphQL.ObjectType{
             name: "RootQueryType",
             fields: %{
-              greeting: %GraphQL.FieldDefinition{
+              greeting: %{
                 type: "String",
                 resolve: &TestSchema.greeting/3
               }
