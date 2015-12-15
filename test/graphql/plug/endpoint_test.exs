@@ -2,14 +2,14 @@ defmodule GraphQL.Plug.EndpointTest do
   use ExUnit.Case, async: true
   use Plug.Test
 
-  # The GraphQL schema we're going to use
+  # Simplest possible TestSchema
   defmodule TestSchema do
     def schema do
       %GraphQL.Schema{
         query: %GraphQL.ObjectType{
-          name: "RootQueryType",
+          name: "Greeting",
           fields: %{
-            greeting: %GraphQL.FieldDefinition{
+            greeting: %{
               type: "String",
               resolve: &TestSchema.greeting/3,
             }
@@ -86,4 +86,7 @@ defmodule GraphQL.Plug.EndpointTest do
     assert_query {:options, "/", query: "{greeting}"}, {400, invalid_verb_error}
     assert_query {:head,    "/", query: "{greeting}"}, {400, ""}
   end
+
+  # more test inspiration from here
+  # https://github.com/graphql/express-graphql/blob/master/src/__tests__/http-test.js
 end

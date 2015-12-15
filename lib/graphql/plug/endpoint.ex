@@ -12,16 +12,14 @@ defmodule GraphQL.Plug.Endpoint do
     %{schema: schema}
   end
 
-  def call(%Conn{method: req_method, params: %{"query" => query}} = conn, %{schema: schema})
-  when req_method in ["GET", "POST"] do
+  def call(%Conn{method: m, params: %{"query" => query}} = conn, %{schema: schema}) when m in ["GET", "POST"] do
     cond do
       query && String.strip(query) != "" -> handle_call(conn, schema, query)
       true -> handle_error(conn, "Must provide query string.")
     end
   end
 
-  def call(%Conn{method: req_method} = conn, _)
-  when req_method in ["GET", "POST"] do
+  def call(%Conn{method: m} = conn, _) when m in ["GET", "POST"] do
     handle_error(conn, "Must provide query string.")
   end
 
@@ -33,7 +31,6 @@ defmodule GraphQL.Plug.Endpoint do
     conn
     |> put_resp_content_type("application/json")
     |> execute(schema, query)
-    # |> halt
   end
 
   defp handle_error(conn, message) do
@@ -41,7 +38,6 @@ defmodule GraphQL.Plug.Endpoint do
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(400, errors)
-    # |> halt
   end
 
   defp execute(conn, schema, query) do
