@@ -5,7 +5,10 @@
 
 `plug_graphql` is a Plug integration for the [GraphQL Elixir](https://github.com/joshprice/graphql-elixir) implementation of Facebook's GraphQL.
 
-Allows you to easily mount a GraphQL endpoint in Phoenix.
+This Plug allows you to easily mount a GraphQL endpoint in Phoenix. This example project shows you how:
+
+* [Phoenix GraphQL example project](https://github.com/joshprice/hello_graphql_phoenix)
+
 
 ## Installation
 
@@ -15,8 +18,6 @@ Allows you to easily mount a GraphQL endpoint in Phoenix.
     mix phoenix.new hello_graphql --no-ecto
     cd hello_graphql
     ```
-
-    Alternatively you could clone the [Phoenix GraphQL example project](https://github.com/joshprice/hello_graphql_phoenix) repo
 
     ```sh
     git clone https://github.com/joshprice/hello_graphql_phoenix
@@ -39,9 +40,9 @@ Allows you to easily mount a GraphQL endpoint in Phoenix.
       def schema do
         %GraphQL.Schema{
           query: %GraphQL.ObjectType{
-            name: "RootQueryType",
+            name: "Hello",
             fields: %{
-              greeting: %GraphQL.FieldDefinition{
+              greeting: %{
                 type: "String",
                 resolve: &TestSchema.greeting/3
               }
