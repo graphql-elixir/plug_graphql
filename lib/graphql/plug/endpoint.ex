@@ -12,25 +12,14 @@ defmodule GraphQL.Plug.Endpoint do
     %{schema: schema}
   end
 
-  def call(%Conn{method: m, params: %{"query" => query}} = conn, %{schema: schema}) when m in ["GET", "POST"] do
-    cond do
-      query && String.strip(query) != "" -> handle_call(conn, schema, query)
-      true -> handle_error(conn, "Must provide query string.")
-    end
-  end
+  def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
+    %{schema: schema} = conn.assigns[:graphql_options] || opts
 
-  def call(%Conn{method: m} = conn, %{schema: schema}) when m in ["GET", "POST"] do
-    if graphql?(conn) do
-      case read_whole_body(conn) do
-        {:error, reason} -> handle_error(conn, reason)
-        {:ok, query} ->
-          cond do
-            String.strip(query) != "" -> handle_call(conn, schema, query)
-            true -> handle_error(conn, "Must provide query body.")
-          end
-      end
-    else
-      handle_error(conn, "Must provide query string.")
+    query = query(conn)
+    cond do
+      query && use_graphiql?(conn) -> handle_graphiql_call(conn, schema, query)
+      query -> handle_call(conn, schema, query)
+      true -> handle_error(conn, "Must provide query string.")
     end
   end
 
@@ -42,6 +31,14 @@ defmodule GraphQL.Plug.Endpoint do
     conn
     |> put_resp_content_type("application/json")
     |> execute(schema, query)
+  end
+
+  defp handle_graphiql_call(conn, schema, query) do
+    {:ok, data} = GraphQL.execute(schema, query)
+    {:ok, result} = Poison.encode(%{data: data})
+    conn
+    |> put_resp_content_type("text/html")
+    |> send_resp(200, graphiql_html(query, nil, result))
   end
 
   defp handle_error(conn, message) do
@@ -66,17 +63,126 @@ defmodule GraphQL.Plug.Endpoint do
     end
   end
 
-  defp graphql?(conn) do
-    {"content-type", "application/graphql"} in conn.req_headers
+  defp query(%Conn{params: %{"query" => query}}) do
+    if query && String.strip(query) != "", do: query, else: nil
   end
 
-  defp read_whole_body(conn) do
-    read_whole_body(read_body(conn), "")
+  defp query(_) do
+    nil
   end
 
-  defp read_whole_body({:ok, body, _conn}, acc), do: {:ok, acc <> body}
-  defp read_whole_body({:more, partial_body, conn}, acc) do
-    read_whole_body(read_body(conn), acc <> partial_body)
+  defp use_graphiql?(conn) do
+    case get_req_header(conn, "accept") do
+      [accept_header | _] ->
+        String.contains?(accept_header, "text/html") &&
+        !Map.has_key?(conn.params, "raw")
+      _ ->
+        false
+    end
   end
-  defp read_whole_body({:error, reason}, _acc), do: {:error, reason}
+
+  @graphiql_version "0.4.4"
+  defp graphiql_html(query, variables \\ "", result) do
+    """
+    <!--
+    The request to this GraphQL server provided the header "Accept: text/html"
+    and as a result has been presented GraphiQL - an in-browser IDE for
+    exploring GraphQL.
+
+    If you wish to receive JSON, provide the header "Accept: application/json" or
+    add "&raw" to the end of the URL within a browser.
+    -->
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <link href="//cdn.jsdelivr.net/graphiql/#{@graphiql_version}/graphiql.css" rel="stylesheet" />
+      <script src="//cdn.jsdelivr.net/fetch/0.9.0/fetch.min.js"></script>
+      <script src="//cdn.jsdelivr.net/react/0.14.2/react.min.js"></script>
+      <script src="//cdn.jsdelivr.net/react/0.14.2/react-dom.min.js"></script>
+      <script src="//cdn.jsdelivr.net/graphiql/#{@graphiql_version}/graphiql.js"></script>
+    </head>
+    <body>
+      <script>
+        // Collect the URL parameters
+        var parameters = {};
+        window.location.search.substr(1).split('&').forEach(function (entry) {
+          var eq = entry.indexOf('=');
+          if (eq >= 0) {
+            parameters[decodeURIComponent(entry.slice(0, eq))] =
+              decodeURIComponent(entry.slice(eq + 1));
+          }
+        });
+
+        // Produce a Location query string from a parameter object.
+        function locationQuery(params) {
+          return '?' + Object.keys(params).map(function (key) {
+            return encodeURIComponent(key) + '=' +
+              encodeURIComponent(params[key]);
+          }).join('&');
+        }
+
+        // Derive a fetch URL from the current URL, sans the GraphQL parameters.
+        var graphqlParamNames = {
+          query: true,
+          variables: true,
+          operationName: true
+        };
+
+        var otherParams = {};
+        for (var k in parameters) {
+          if (parameters.hasOwnProperty(k) && graphqlParamNames[k] !== true) {
+            otherParams[k] = parameters[k];
+          }
+        }
+        var fetchURL = locationQuery(otherParams);
+
+        // Defines a GraphQL fetcher using the fetch API.
+        function graphQLFetcher(graphQLParams) {
+          return fetch(fetchURL, {
+            method: 'post',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(graphQLParams),
+            credentials: 'include',
+          }).then(function (response) {
+            return response.json();
+          });
+        }
+
+        // When the query and variables string is edited, update the URL bar so
+        // that it can be easily shared.
+        function onEditQuery(newQuery) {
+          parameters.query = newQuery;
+          updateURL();
+        }
+
+        function onEditVariables(newVariables) {
+          parameters.variables = newVariables;
+          updateURL();
+        }
+
+        function updateURL() {
+          history.replaceState(null, null, locationQuery(parameters));
+        }
+
+        console.log("#{query}")
+        // Render <GraphiQL /> into the body.
+        React.render(
+          React.createElement(GraphiQL, {
+            fetcher: graphQLFetcher,
+            onEditQuery: onEditQuery,
+            onEditVariables: onEditVariables,
+            query: '#{query}',
+            response: '#{result}',
+            variables: '#{variables}'
+          }),
+          document.body
+        );
+      </script>
+    </body>
+    </html>
+    """
+  end
 end

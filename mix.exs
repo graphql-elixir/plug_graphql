@@ -1,4 +1,4 @@
-defmodule PlugGraphql.Mixfile do
+defmodule GraphQL.Plug.Mixfile do
   use Mix.Project
 
   @version "0.0.7"
