@@ -9,16 +9,17 @@ defmodule GraphQL.Plug.Endpoint do
       {mod, func} -> apply(mod, func, [])
       s -> s
     end
-    %{schema: schema}
+    root_callback = Keyword.get(opts, :root, %{})
+    %{schema: schema, root_callback: root_callback}
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
-    %{schema: schema} = conn.assigns[:graphql_options] || opts
+    %{schema: schema, root_callback} = conn.assigns[:graphql_options] || opts
 
     query = query(conn)
     cond do
-      query && use_graphiql?(conn) -> handle_graphiql_call(conn, schema, query)
-      query -> handle_call(conn, schema, query)
+      query && use_graphiql?(conn) -> handle_graphiql_call(conn, schema, root_callback, query)
+      query -> handle_call(conn, schema, root_callback, query)
       true -> handle_error(conn, "Must provide query string.")
     end
   end
@@ -27,10 +28,10 @@ defmodule GraphQL.Plug.Endpoint do
     handle_error(conn, "GraphQL only supports GET and POST requests.")
   end
 
-  defp handle_call(conn, schema, query) do
+  defp handle_call(conn, schema, root_callback, query) do
     conn
     |> put_resp_content_type("application/json")
-    |> execute(schema, query)
+    |> execute(schema, root_callback, query)
   end
 
   defp handle_graphiql_call(conn, schema, query) do
@@ -48,8 +49,13 @@ defmodule GraphQL.Plug.Endpoint do
     |> send_resp(400, errors)
   end
 
-  defp execute(conn, schema, query) do
-    case GraphQL.execute(schema, query) do
+  defp execute(conn, schema, root_callback, query) do
+    root_value = case is_function(root_callback) do
+      true -> root_callback.(conn)
+      _    -> %{}
+    end
+
+    case GraphQL.execute(schema, query, root_value) do
       {:ok, data} ->
         case Poison.encode(%{data: data}) do
           {:ok, json}      -> send_resp(conn, 200, json)

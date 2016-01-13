@@ -19,6 +19,7 @@ defmodule GraphQL.Plug.EndpointTest do
     end
 
     def greeting(_, %{name: name}, _), do: "Hello, #{name}!"
+    def greeting(%{greeting: name}, _, _), do: "Hello, #{name}!"
     def greeting(_, _, _), do: greeting(%{}, %{name: "world"}, %{})
   end
 
@@ -34,10 +35,23 @@ defmodule GraphQL.Plug.EndpointTest do
     assert_query TestPlug, {:post, "/", query: "{greeting}"}, {200, success}
   end
 
+  test "root data can be set at request time" do
+    defmodule TestRootPlug do
+      use Plug.Builder
+      def root_eval(_conn), do: %{greeting: "Root"}
+      plug GraphQL.Plug.Endpoint, [schema: {TestSchema, :schema}, root: &TestRootPlug.root_eval/1 ]
+    end
+
+    conn = conn(:get, "/", query: "{greeting}")
+    conn = TestRootPlug.call conn, []
+
+    assert conn.resp_body == ~S({"data":{"greeting":"Hello, Root!"}})
+  end
+
   test "specify schema using {module, fun} syntax" do
     defmodule TestMFPlug do
       use Plug.Builder
-
+      
       plug GraphQL.Plug.Endpoint, schema: {TestSchema, :schema}
     end
     success = ~S({"data":{"greeting":"Hello, world!"}})
