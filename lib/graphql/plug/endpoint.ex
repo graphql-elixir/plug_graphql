@@ -1,5 +1,5 @@
 defmodule GraphQL.Plug.Endpoint do
-  import Plug.Conn
+  import Plug.Conn, except: [read_body: 1, read_body: 2]
   alias Plug.Conn
 
   @behaviour Plug
@@ -19,8 +19,17 @@ defmodule GraphQL.Plug.Endpoint do
     end
   end
 
-  def call(%Conn{method: m} = conn, _) when m in ["GET", "POST"] do
-    handle_error(conn, "Must provide query string.")
+  def call(%Conn{method: m} = conn, schema) when m in ["GET", "POST"] do
+    if graphql?(conn) do
+      case read_body(conn) do
+        {:err, reason} -> handle_error(conn, reason)
+        {:ok, query}   ->
+          conn = Map.put(conn, :params, %{"query" => query})
+          call(conn, schema)
+      end
+    else
+      handle_error(conn, "Must provide query string.")
+    end
   end
 
   def call(%Conn{method: _} = conn, _) do
@@ -54,4 +63,18 @@ defmodule GraphQL.Plug.Endpoint do
         end
     end
   end
+
+  defp graphql?(conn) do
+    {"content-type", "application/graphql"} in conn.req_headers
+  end
+
+  defp read_body(conn) do
+    read_body(Plug.Conn.read_body(conn), "")
+  end
+
+  defp read_body({:ok, body, _conn}, acc), do: {:ok, acc <> body}
+  defp read_body({:more, partial_body, conn}, acc) do
+    read_body(Plug.Conn.read_body(conn), acc <> partial_body)
+  end
+  defp read_body({:err, reason}, _acc), do: {:err, reason}
 end
