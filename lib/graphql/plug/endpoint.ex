@@ -19,7 +19,7 @@ defmodule GraphQL.Plug.Endpoint do
     end
   end
 
-  def call(%Conn{method: m} = conn, schema) when m in ["GET", "POST"] do
+  def call(%Conn{method: m} = conn, %{schema: schema}) when m in ["GET", "POST"] do
     if graphql?(conn) do
       case read_whole_body(conn) do
         {:error, reason} -> handle_error(conn, reason)
