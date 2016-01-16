@@ -22,8 +22,8 @@ defmodule GraphQL.Plug.Endpoint do
   def call(%Conn{method: m} = conn, schema) when m in ["GET", "POST"] do
     if graphql?(conn) do
       case read_body(conn) do
-        {:err, reason} -> handle_error(conn, reason)
-        {:ok, query}   ->
+        {:error, reason} -> handle_error(conn, reason)
+        {:ok, query} ->
           conn = Map.put(conn, :params, %{"query" => query})
           call(conn, schema)
       end
@@ -76,5 +76,5 @@ defmodule GraphQL.Plug.Endpoint do
   defp read_body({:more, partial_body, conn}, acc) do
     read_body(Plug.Conn.read_body(conn), acc <> partial_body)
   end
-  defp read_body({:err, reason}, _acc), do: {:err, reason}
+  defp read_body({:error, reason}, _acc), do: {:error, reason}
 end
