@@ -24,8 +24,10 @@ defmodule GraphQL.Plug.Endpoint do
       case read_body(conn) do
         {:error, reason} -> handle_error(conn, reason)
         {:ok, query} ->
-          conn = Map.put(conn, :params, %{"query" => query})
-          call(conn, schema)
+          cond do
+            String.strip(query) != "" -> handle_call(conn, schema, query)
+            true -> handle_error(conn, "Must provide query body.")
+          end
       end
     else
       handle_error(conn, "Must provide query string.")
