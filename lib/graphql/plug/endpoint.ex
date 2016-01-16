@@ -1,5 +1,5 @@
 defmodule GraphQL.Plug.Endpoint do
-  import Plug.Conn, except: [read_body: 1, read_body: 2]
+  import Plug.Conn
   alias Plug.Conn
 
   @behaviour Plug
@@ -21,7 +21,7 @@ defmodule GraphQL.Plug.Endpoint do
 
   def call(%Conn{method: m} = conn, schema) when m in ["GET", "POST"] do
     if graphql?(conn) do
-      case read_body(conn) do
+      case read_whole_body(conn) do
         {:error, reason} -> handle_error(conn, reason)
         {:ok, query} ->
           cond do
@@ -70,13 +70,13 @@ defmodule GraphQL.Plug.Endpoint do
     {"content-type", "application/graphql"} in conn.req_headers
   end
 
-  defp read_body(conn) do
-    read_body(Plug.Conn.read_body(conn), "")
+  defp read_whole_body(conn) do
+    read_whole_body(read_body(conn), "")
   end
 
-  defp read_body({:ok, body, _conn}, acc), do: {:ok, acc <> body}
-  defp read_body({:more, partial_body, conn}, acc) do
-    read_body(Plug.Conn.read_body(conn), acc <> partial_body)
+  defp read_whole_body({:ok, body, _conn}, acc), do: {:ok, acc <> body}
+  defp read_whole_body({:more, partial_body, conn}, acc) do
+    read_whole_body(read_body(conn), acc <> partial_body)
   end
-  defp read_body({:error, reason}, _acc), do: {:error, reason}
+  defp read_whole_body({:error, reason}, _acc), do: {:error, reason}
 end
