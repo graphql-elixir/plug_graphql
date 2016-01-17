@@ -87,6 +87,25 @@ defmodule GraphQL.Plug.EndpointTest do
     assert_query {:head,    "/", query: "{greeting}"}, {400, ""}
   end
 
+  test "content-type application/graphql" do
+    success = ~S({"data":{"greeting":"Hello, world!"}})
+    conn = conn(:post, "/", "{greeting}") |> put_req_header("content-type", "application/graphql")
+    assert_response(conn, 200, success)
+  end
+
+  test "content-type application/graphql no body" do
+    empty_body_error = ~S({"errors":[{"message":"Must provide query body."}]})
+
+    conn = conn(:post, "/", nil) |> put_req_header("content-type", "application/graphql")
+    assert_response(conn, 400, empty_body_error)
+
+    conn = conn(:post, "/", "") |> put_req_header("content-type", "application/graphql")
+    assert_response(conn, 400, empty_body_error)
+
+    conn = conn(:post, "/", "  ") |> put_req_header("content-type", "application/graphql")
+    assert_response(conn, 400, empty_body_error)
+  end
+
   # more test inspiration from here
   # https://github.com/graphql/express-graphql/blob/master/src/__tests__/http-test.js
 end

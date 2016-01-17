@@ -19,8 +19,19 @@ defmodule GraphQL.Plug.Endpoint do
     end
   end
 
-  def call(%Conn{method: m} = conn, _) when m in ["GET", "POST"] do
-    handle_error(conn, "Must provide query string.")
+  def call(%Conn{method: m} = conn, %{schema: schema}) when m in ["GET", "POST"] do
+    if graphql?(conn) do
+      case read_whole_body(conn) do
+        {:error, reason} -> handle_error(conn, reason)
+        {:ok, query} ->
+          cond do
+            String.strip(query) != "" -> handle_call(conn, schema, query)
+            true -> handle_error(conn, "Must provide query body.")
+          end
+      end
+    else
+      handle_error(conn, "Must provide query string.")
+    end
   end
 
   def call(%Conn{method: _} = conn, _) do
@@ -54,4 +65,18 @@ defmodule GraphQL.Plug.Endpoint do
         end
     end
   end
+
+  defp graphql?(conn) do
+    {"content-type", "application/graphql"} in conn.req_headers
+  end
+
+  defp read_whole_body(conn) do
+    read_whole_body(read_body(conn), "")
+  end
+
+  defp read_whole_body({:ok, body, _conn}, acc), do: {:ok, acc <> body}
+  defp read_whole_body({:more, partial_body, conn}, acc) do
+    read_whole_body(read_body(conn), acc <> partial_body)
+  end
+  defp read_whole_body({:error, reason}, _acc), do: {:error, reason}
 end
