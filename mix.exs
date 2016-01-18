@@ -1,7 +1,7 @@
 defmodule GraphQL.Plug.Mixfile do
   use Mix.Project
 
-  @version "0.0.7"
+  @version "0.1.0"
 
   @description "A Plug integration for the Elixir implementation of Facebook's GraphQL"
   @repo_url "https://github.com/joshprice/plug_graphql"
