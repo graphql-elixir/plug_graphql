@@ -5,7 +5,10 @@
 
 `plug_graphql` is a Plug integration for the [GraphQL Elixir](https://github.com/joshprice/graphql-elixir) implementation of Facebook's GraphQL.
 
-Allows you to easily mount a GraphQL endpoint in Phoenix.
+This Plug allows you to easily mount a GraphQL endpoint in Phoenix. This example project shows you how:
+
+* [Phoenix GraphQL example project](https://github.com/joshprice/hello_graphql_phoenix)
+
 
 ## Installation
 
@@ -16,17 +19,21 @@ Allows you to easily mount a GraphQL endpoint in Phoenix.
     cd hello_graphql
     ```
 
-    Alternatively you could clone the [Phoenix GraphQL example project](https://github.com/joshprice/hello_graphql_phoenix) repo
-
     ```sh
     git clone https://github.com/joshprice/hello_graphql_phoenix
     ```
 
-  2. Add `plug_graphql` to your list of dependencies in `mix.exs` and install the package with `mix deps.get`.
+  2. Add `plug_graphql` to your list of dependencies and applications in `mix.exs` and install the package with `mix deps.get`.
 
     ```elixir
+    def application do
+      # Add the application to your list of applications.
+      # This will ensure that it will be included in a release.
+      [applications: [:logger, :plug_graphql]]
+    end
+
     def deps do
-      [{:plug_graphql, "~> 0.0.7"}]
+      [{:plug_graphql, "~> 0.1.0"}]
     end
     ```
 
@@ -39,11 +46,11 @@ Allows you to easily mount a GraphQL endpoint in Phoenix.
       def schema do
         %GraphQL.Schema{
           query: %GraphQL.ObjectType{
-            name: "RootQueryType",
+            name: "Hello",
             fields: %{
               greeting: %{
-                type: "String",
-                resolve: &TestSchema.greeting/3
+                type: %String{},
+                resolve: {TestSchema, :greeting}
               }
             }
           }
