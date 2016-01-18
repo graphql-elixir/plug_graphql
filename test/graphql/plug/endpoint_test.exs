@@ -35,23 +35,42 @@ defmodule GraphQL.Plug.EndpointTest do
     assert_query TestPlug, {:post, "/", query: "{greeting}"}, {200, success}
   end
 
-  test "root data can be set at request time" do
-    defmodule TestRootPlug do
+  test "root data can be set at request time using function reference" do
+    defmodule TestRootPlugWithFunctionReference do
       use Plug.Builder
       def root_eval(_conn), do: %{greeting: "Root"}
-      plug GraphQL.Plug.Endpoint, [schema: {TestSchema, :schema}, root: &TestRootPlug.root_eval/1 ]
+      plug GraphQL.Plug.Endpoint, [schema: {TestSchema, :schema}, root_value: &TestRootPlugWithFunctionReference.root_eval/1 ]
     end
 
-    conn = conn(:get, "/", query: "{greeting}")
-    conn = TestRootPlug.call conn, []
+    success = ~S({"data":{"greeting":"Hello, Root!"}})
+    assert_query TestRootPlugWithFunctionReference, {:get, "/", query: "{greeting}"}, {200, success}
+  end
 
-    assert conn.resp_body == ~S({"data":{"greeting":"Hello, Root!"}})
+  test "root data can be hard coded at init time." do
+    defmodule TestRootPlugWithHardCodedData do
+      use Plug.Builder
+      plug GraphQL.Plug.Endpoint, [schema: {TestSchema, :schema}, root_value: %{greeting: "Hard Coded"}]
+    end
+
+    success = ~S({"data":{"greeting":"Hello, Hard Coded!"}})
+    assert_query TestRootPlugWithHardCodedData, {:get, "/", query: "{greeting}"}, {200, success}
+  end
+
+  test "root data can be set using {module, fun} syntax" do
+    defmodule TestRootPlugWithMF do
+      use Plug.Builder
+      def root_eval(_conn), do: %{greeting: "MF"}
+      plug GraphQL.Plug.Endpoint, [schema: {TestSchema, :schema}, root_value: {TestRootPlugWithMF, :root_eval}]
+    end
+
+    success = ~S({"data":{"greeting":"Hello, MF!"}})
+    assert_query TestRootPlugWithMF, {:get, "/", query: "{greeting}"}, {200, success}
   end
 
   test "specify schema using {module, fun} syntax" do
     defmodule TestMFPlug do
       use Plug.Builder
-      
+
       plug GraphQL.Plug.Endpoint, schema: {TestSchema, :schema}
     end
     success = ~S({"data":{"greeting":"Hello, world!"}})
