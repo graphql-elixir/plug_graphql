@@ -1,7 +1,7 @@
 defmodule GraphQL.Plug.Mixfile do
   use Mix.Project
 
-  @version "0.1.1"
+  @version "0.1.2"
 
   @description "A Plug integration for the Elixir implementation of Facebook's GraphQL"
   @repo_url "https://github.com/joshprice/plug_graphql"
@@ -35,6 +35,6 @@ defmodule GraphQL.Plug.Mixfile do
     [maintainers: ["Josh Price"],
      licenses: ["BSD"],
      links: %{"GitHub" => @repo_url},
-     files: ~w(lib mix.exs *.md LICENSE)]
+     files: ~w(lib templates mix.exs *.md LICENSE)]
   end
 end

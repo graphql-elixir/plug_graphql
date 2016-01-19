@@ -33,7 +33,7 @@ This Plug allows you to easily mount a GraphQL endpoint in Phoenix. This example
     end
 
     def deps do
-      [{:plug_graphql, "~> 0.1.0"}]
+      [{:plug_graphql, "~> 0.1.2"}]
     end
     ```
 
