@@ -70,11 +70,11 @@ defmodule GraphQL.Plug.Endpoint do
     apply(mod, func, [conn])
   end
 
-  defp evaluate_root_value(conn, root_value) when is_function(root_value) do
+  defp evaluate_root_value(conn, root_value) when is_function(root_value, 1) do
     apply(root_value, [conn])
   end
 
-  defp evaluate_root_value(_, root_value) when is_nil(root_value) do
+  defp evaluate_root_value(_, nil) do
     %{}
   end
 
