@@ -16,7 +16,7 @@ defmodule GraphQL.Plug do
       s -> s
     end
     root_value = Keyword.get(opts, :root_value, %{})
-    %{root_value: root_value, schema: schema}
+    %{:schema => schema, :root_value => root_value}
   end
 
   def call(conn, opts) do

@@ -10,11 +10,11 @@ defmodule GraphQL.Plug.Endpoint do
       s -> s
     end
     root_value = Keyword.get(opts, :root_value, %{})
-    %{root_value: root_value, schema: schema}
+    %{:schema => schema, :root_value => root_value}
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
-    %{root_value: root_value, schema: schema} = conn.assigns[:graphql_options] || opts
+    %{:schema => schema, :root_value => root_value} = conn.assigns[:graphql_options] || opts
 
     query = query(conn)
     evaluated_root_value = evaluate_root_value(conn, root_value)
@@ -51,7 +51,6 @@ defmodule GraphQL.Plug.Endpoint do
   end
 
   defp execute(conn, schema, root_value, query) do
-
     case GraphQL.execute(schema, query, root_value) do
       {:ok, data} ->
         case Poison.encode(%{data: data}) do
@@ -70,8 +69,8 @@ defmodule GraphQL.Plug.Endpoint do
     apply(mod, func, [conn])
   end
 
-  defp evaluate_root_value(conn, root_value) when is_function(root_value, 1) do
-    apply(root_value, [conn])
+  defp evaluate_root_value(conn, fn_root_value) when is_function(fn_root_value, 1) do
+    apply(fn_root_value, [conn])
   end
 
   defp evaluate_root_value(_, nil) do
