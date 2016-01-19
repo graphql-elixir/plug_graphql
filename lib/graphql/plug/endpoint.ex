@@ -15,16 +15,18 @@ defmodule GraphQL.Plug.Endpoint do
       {mod, func} -> apply(mod, func, [])
       s -> s
     end
-    %{schema: schema}
+    root_value = Keyword.get(opts, :root_value, %{})
+    %{:schema => schema, :root_value => root_value}
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
-    %{schema: schema} = conn.assigns[:graphql_options] || opts
+    %{:schema => schema, :root_value => root_value} = conn.assigns[:graphql_options] || opts
 
     query = query(conn)
+    evaluated_root_value = evaluate_root_value(conn, root_value)
     cond do
-      query && use_graphiql?(conn) -> handle_graphiql_call(conn, schema, query)
-      query -> handle_call(conn, schema, query)
+      query && use_graphiql?(conn) -> handle_graphiql_call(conn, schema, evaluated_root_value, query)
+      query -> handle_call(conn, schema, evaluated_root_value, query)
       true -> handle_error(conn, "Must provide query string.")
     end
   end
@@ -33,14 +35,14 @@ defmodule GraphQL.Plug.Endpoint do
     handle_error(conn, "GraphQL only supports GET and POST requests.")
   end
 
-  defp handle_call(conn, schema, query) do
+  defp handle_call(conn, schema, root_value, query) do
     conn
     |> put_resp_content_type("application/json")
-    |> execute(schema, query)
+    |> execute(schema, root_value, query)
   end
 
-  defp handle_graphiql_call(conn, schema, query) do
-    {:ok, data} = GraphQL.execute(schema, query)
+  defp handle_graphiql_call(conn, schema, root_value, query) do
+    {:ok, data} = GraphQL.execute(schema, query, root_value)
     {:ok, result} = Poison.encode(%{data: data})
     conn
     |> put_resp_content_type("text/html")
@@ -54,8 +56,8 @@ defmodule GraphQL.Plug.Endpoint do
     |> send_resp(400, errors)
   end
 
-  defp execute(conn, schema, query) do
-    case GraphQL.execute(schema, query) do
+  defp execute(conn, schema, root_value, query) do
+    case GraphQL.execute(schema, query, root_value) do
       {:ok, data} ->
         case Poison.encode(%{data: data}) do
           {:ok, json}      -> send_resp(conn, 200, json)
@@ -67,6 +69,22 @@ defmodule GraphQL.Plug.Endpoint do
           {:error, errors} -> send_resp(conn, 400, errors)
         end
     end
+  end
+
+  defp evaluate_root_value(conn, {mod, func}) do
+    apply(mod, func, [conn])
+  end
+
+  defp evaluate_root_value(conn, fn_root_value) when is_function(fn_root_value, 1) do
+    apply(fn_root_value, [conn])
+  end
+
+  defp evaluate_root_value(_, nil) do
+    %{}
+  end
+
+  defp evaluate_root_value(_, root_value) do
+    root_value
   end
 
   defp query(%Conn{params: %{"query" => query}}) do

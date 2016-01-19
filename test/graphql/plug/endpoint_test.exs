@@ -19,6 +19,7 @@ defmodule GraphQL.Plug.EndpointTest do
     end
 
     def greeting(_, %{name: name}, _), do: "Hello, #{name}!"
+    def greeting(%{greeting: name}, _, _), do: "Hello, #{name}!"
     def greeting(_, _, _), do: greeting(%{}, %{name: "world"}, %{})
   end
 
@@ -32,6 +33,38 @@ defmodule GraphQL.Plug.EndpointTest do
     success = ~S({"data":{"greeting":"Hello, world!"}})
     assert_query TestPlug, {:get,  "/", query: "{greeting}"}, {200, success}
     assert_query TestPlug, {:post, "/", query: "{greeting}"}, {200, success}
+  end
+
+  test "root data can be set at request time using function reference" do
+    defmodule TestRootPlugWithFunctionReference do
+      use Plug.Builder
+      def root_eval(_conn), do: %{greeting: "Root"}
+      plug GraphQL.Plug.Endpoint, [schema: {TestSchema, :schema}, root_value: &TestRootPlugWithFunctionReference.root_eval/1 ]
+    end
+
+    success = ~S({"data":{"greeting":"Hello, Root!"}})
+    assert_query TestRootPlugWithFunctionReference, {:get, "/", query: "{greeting}"}, {200, success}
+  end
+
+  test "root data can be hard coded at init time." do
+    defmodule TestRootPlugWithHardCodedData do
+      use Plug.Builder
+      plug GraphQL.Plug.Endpoint, [schema: {TestSchema, :schema}, root_value: %{greeting: "Hard Coded"}]
+    end
+
+    success = ~S({"data":{"greeting":"Hello, Hard Coded!"}})
+    assert_query TestRootPlugWithHardCodedData, {:get, "/", query: "{greeting}"}, {200, success}
+  end
+
+  test "root data can be set using {module, fun} syntax" do
+    defmodule TestRootPlugWithMF do
+      use Plug.Builder
+      def root_eval(_conn), do: %{greeting: "MF"}
+      plug GraphQL.Plug.Endpoint, [schema: {TestSchema, :schema}, root_value: {TestRootPlugWithMF, :root_eval}]
+    end
+
+    success = ~S({"data":{"greeting":"Hello, MF!"}})
+    assert_query TestRootPlugWithMF, {:get, "/", query: "{greeting}"}, {200, success}
   end
 
   test "specify schema using {module, fun} syntax" do
