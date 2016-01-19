@@ -81,7 +81,6 @@ add "&raw" to the end of the URL within a browser.
       history.replaceState(null, null, locationQuery(parameters));
     }
 
-    console.log("<%= query %>")
     // Render <GraphiQL /> into the body.
     React.render(
       React.createElement(GraphiQL, {
