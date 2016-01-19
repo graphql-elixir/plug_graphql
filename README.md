@@ -3,9 +3,9 @@
 [![Build Status](https://travis-ci.org/joshprice/plug_graphql.svg)](https://travis-ci.org/joshprice/plug_graphql)
 [![Public Slack Discussion](https://graphql-slack.herokuapp.com/badge.svg)](https://graphql-slack.herokuapp.com/)
 
-`plug_graphql` is a Plug integration for the [GraphQL Elixir](https://github.com/joshprice/graphql-elixir) implementation of Facebook's GraphQL.
+`plug_graphql` is a [Plug](https://github.com/elixir-lang/plug) integration for the [GraphQL Elixir](https://github.com/joshprice/graphql-elixir) implementation of Facebook's GraphQL.
 
-This Plug allows you to easily mount a GraphQL endpoint in Phoenix. This example project shows you how:
+This [Plug](https://github.com/elixir-lang/plug) allows you to easily mount a GraphQL endpoint in Phoenix. This example project shows you how:
 
 * [Phoenix GraphQL example project](https://github.com/joshprice/hello_graphql_phoenix)
 
@@ -76,7 +76,7 @@ This Plug allows you to easily mount a GraphQL endpoint in Phoenix. This example
     scope "/api" do
       pipe_through :api
 
-      forward "/", GraphQL.Plug.Endpoint, schema: {TestSchema, :schema}
+      forward "/", GraphQL.Plug, schema: {TestSchema, :schema}
     end
     ```
 
