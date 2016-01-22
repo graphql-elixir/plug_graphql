@@ -26,7 +26,7 @@ defmodule GraphQL.Plug.EndpointTest do
   defmodule TestPlug do
     use Plug.Builder
 
-    plug GraphQL.Plug, schema: {TestSchema, :schema}
+    plug GraphQL.Plug.Endpoint, schema: {TestSchema, :schema}
   end
 
   test "GET and POST successful query" do

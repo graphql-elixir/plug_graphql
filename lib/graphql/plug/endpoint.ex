@@ -4,7 +4,7 @@ defmodule GraphQL.Plug.Endpoint do
 
   @behaviour Plug
 
-
+  # Load GraphiQL HTML view
   require EEx
   EEx.function_from_file :defp, :graphiql_html,
     Path.absname(Path.relative_to_cwd("templates/graphiql.eex")),
@@ -16,11 +16,11 @@ defmodule GraphQL.Plug.Endpoint do
       s -> s
     end
     root_value = Keyword.get(opts, :root_value, %{})
-    %{:schema => schema, :root_value => root_value}
+    %{schema: schema, root_value: root_value}
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
-    %{:schema => schema, :root_value => root_value} = conn.assigns[:graphql_options] || opts
+    %{schema: schema, root_value: root_value} = conn.assigns[:graphql_options] || opts
 
     query = query(conn)
     evaluated_root_value = evaluate_root_value(conn, root_value)
@@ -75,8 +75,8 @@ defmodule GraphQL.Plug.Endpoint do
     apply(mod, func, [conn])
   end
 
-  defp evaluate_root_value(conn, fn_root_value) when is_function(fn_root_value, 1) do
-    apply(fn_root_value, [conn])
+  defp evaluate_root_value(conn, root_fn) when is_function(root_fn, 1) do
+    apply(root_fn, [conn])
   end
 
   defp evaluate_root_value(_, nil) do
