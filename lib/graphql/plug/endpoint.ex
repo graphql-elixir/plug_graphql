@@ -43,7 +43,7 @@ defmodule GraphQL.Plug.Endpoint do
 
   defp handle_graphiql_call(conn, schema, root_value, query) do
     {:ok, data} = GraphQL.execute(schema, query, root_value)
-    {:ok, result} = Poison.encode(%{data: data})
+    {:ok, result} = Poison.encode(data)
     conn
     |> put_resp_content_type("text/html")
     |> send_resp(200, graphiql_html("0.4.4", query, nil, result))
@@ -59,7 +59,7 @@ defmodule GraphQL.Plug.Endpoint do
   defp execute(conn, schema, root_value, query) do
     case GraphQL.execute(schema, query, root_value) do
       {:ok, data} ->
-        case Poison.encode(%{data: data}) do
+        case Poison.encode(data) do
           {:ok, json}      -> send_resp(conn, 200, json)
           {:error, errors} -> send_resp(conn, 400, errors)
         end
