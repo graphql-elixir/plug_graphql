@@ -3,6 +3,8 @@ defmodule GraphQL.PlugTest do
   use Plug.Test
   import ExUnit.TestHelpers
 
+  alias GraphQL.Type.String
+
   defmodule TestSchema do
     def schema do
       %GraphQL.Schema{
@@ -10,7 +12,10 @@ defmodule GraphQL.PlugTest do
           name: "Greeting",
           fields: %{
             greeting: %{
-              type: "String",
+              type: %String{},
+              args: %{
+                name: %{type: %String{}}
+              },
               resolve: {TestSchema, :greeting},
             }
           }
@@ -62,8 +67,15 @@ defmodule GraphQL.PlugTest do
 
     conn = conn(:post, "/", "") |> put_req_header("content-type", "application/json")
     assert_response(TestPlug, conn, 400, empty_body_error)
+  end
 
-    # conn = conn(:post, "/", "  ") |> put_req_header("content-type", "application/json")
-    # assert_response(TestPlug, conn, 400, empty_body_error)
+  test "POST JSON with variables" do
+    success = ~S({"data":{"greeting":"Hello, Josh!"}})
+    {:ok, json_body} = Poison.encode(%{
+      query: "query hi($name: String) { greeting(name: $name) }",
+      variables: %{"name" => "Josh"}
+    })
+    conn = conn(:post, "/", json_body) |> put_req_header("content-type", "application/json")
+    assert_response(TestPlug, conn, 200, success)
   end
 end

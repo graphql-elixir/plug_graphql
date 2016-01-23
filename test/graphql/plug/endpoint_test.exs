@@ -3,6 +3,8 @@ defmodule GraphQL.Plug.EndpointTest do
   use Plug.Test
   import ExUnit.TestHelpers
 
+  alias GraphQL.Type.String
+
   defmodule TestSchema do
     def schema do
       %GraphQL.Schema{
@@ -10,7 +12,10 @@ defmodule GraphQL.Plug.EndpointTest do
           name: "Greeting",
           fields: %{
             greeting: %{
-              type: "String",
+              type: %String{},
+              args: %{
+                name: %{type: %String{}}
+              },
               resolve: {TestSchema, :greeting},
             }
           }
@@ -65,6 +70,38 @@ defmodule GraphQL.Plug.EndpointTest do
 
     success = ~S({"data":{"greeting":"Hello, MF!"}})
     assert_query TestRootPlugWithMF, {:get, "/", query: "{greeting}"}, {200, success}
+  end
+
+  test "GET with variables" do
+    success = ~S({"data":{"greeting":"Hello, Josh!"}})
+    query = "query hi($name: String) { greeting(name: $name) }"
+    assert_query TestPlug, {:get,  "/", query: query, variables: ~S({"name":"Josh"})}, {200, success}
+  end
+
+  test "GET with variables ignores invalid variables string" do
+    success = ~S({"data":{"greeting":"Hello, !"}})
+    query = "query hi($name: String) { greeting(name: $name) }"
+    assert_query TestPlug, {:get,  "/", query: query, variables: "x}"}, {200, success}
+  end
+
+  test "GET with operation name" do
+    success = ~S({"data":{"greeting":"Hello, you!"}})
+    query = """
+      query hi { greeting(name: "there") }
+      query hey { greeting(name: "you") }
+      query hello { greeting(name: "Josh") }
+    """
+    assert_query TestPlug, {:get,  "/", query: query, operation_name: "hey"}, {200, success}
+    assert_query TestPlug, {:get,  "/", query: query, operationName: "hey"}, {200, success}
+  end
+
+  test "GET without operation name errors with multiple queries" do
+    error = ~S({"errors":[{"message":"Must provide operation name if query contains multiple operations."}]})
+    query = """
+      query hi { greeting(name: "there") }
+      query hey { greeting(name: "you") }
+    """
+    assert_query TestPlug, {:get,  "/", query: query}, {400, error}
   end
 
   test "specify schema using {module, fun} syntax" do
