@@ -15,7 +15,7 @@ This [Plug](https://github.com/elixir-lang/plug) allows you to easily mount a Gr
   1. Make a new Phoenix app, or add it to your existing app.
 
     ```sh
-    mix phoenix.new hello_graphql --no-ecto
+    mix phoenix.new hello_graphql
     cd hello_graphql
     ```
 
@@ -33,7 +33,7 @@ This [Plug](https://github.com/elixir-lang/plug) allows you to easily mount a Gr
     end
 
     def deps do
-      [{:plug_graphql, "~> 0.1.2"}]
+      [{:plug_graphql, "~> 0.1.3"}]
     end
     ```
 
@@ -98,16 +98,18 @@ This [Plug](https://github.com/elixir-lang/plug) allows you to easily mount a Gr
 
 ## Contributions
 
-This is pretty early days, the graphql execution engine needs a lot more work to be useful.
+This is pretty early days, the GraphQL Elixir ecosystem needs a lot more work to be useful.
 
 However we can't get there without your help, so any questions, bug reports, feedback,
 feature requests and/or PRs are most welcome!
 
 ## Acknowledgements
 
-Thanks and appreciation goes to the following contributors for answering many questions and providing helpful feedback:
+Thanks and appreciation goes to the following contributors for PRs, discussions, answering many questions and providing helpful feedback:
 
 * Daniel Neighman (https://github.com/hassox)
 * Chris McCord (https://github.com/chrismccord)
+* Aaron Weiker (https://github.com/aweiker)
+* James Hiscock (https://github.com/bockit)
 
 Thanks also to everyone who has submitted PRs, logged issues, given feedback or asked questions.
