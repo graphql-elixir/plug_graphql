@@ -47,12 +47,18 @@ defmodule GraphQL.Plug.Endpoint do
     |> execute(schema, root_value, query, variables, operation_name)
   end
 
+  defp escape_newlines(s) do
+    String.replace(s, ~r/\n/, "\\n")
+  end
+
   defp handle_graphiql_call(conn, schema, root_value, query, variables, operation_name) do
     {:ok, data} = GraphQL.execute(schema, query, root_value, variables, operation_name)
-    {:ok, result} = Poison.encode(data)
+    {:ok, variables} = Poison.encode(variables, pretty: true)
+    {:ok, result}    = Poison.encode(data, pretty: true)
+    graphiql = graphiql_html("0.4.5", escape_newlines(query), escape_newlines(variables), escape_newlines(result))
     conn
     |> put_resp_content_type("text/html")
-    |> send_resp(200, graphiql_html("0.4.4", query, nil, result))
+    |> send_resp(200, graphiql)
   end
 
   defp handle_error(conn, message) do
