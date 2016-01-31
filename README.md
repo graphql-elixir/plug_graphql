@@ -33,7 +33,7 @@ This [Plug](https://github.com/elixir-lang/plug) allows you to easily mount a Gr
     end
 
     def deps do
-      [{:plug_graphql, "~> 0.1.3"}]
+      [{:plug_graphql, "~> 0.1.4"}]
     end
     ```
 
@@ -45,11 +45,11 @@ This [Plug](https://github.com/elixir-lang/plug) allows you to easily mount a Gr
     defmodule TestSchema do
       def schema do
         %GraphQL.Schema{
-          query: %GraphQL.ObjectType{
+          query: %GraphQL.Type.ObjectType{
             name: "Hello",
             fields: %{
               greeting: %{
-                type: %String{},
+                type: %GraphQL.Type.String{},
                 resolve: {TestSchema, :greeting}
               }
             }
