@@ -1,4 +1,22 @@
 defmodule GraphQL.Plug.Endpoint do
+  @moduledoc """
+  This is the core plug for mounting a GraphQL server.
+
+  You can build your own pipeline by mounting the
+  `GraphQL.Plug.Endpoint` plug directly.
+
+  ```elixir
+  forward "/graphql", GraphQL.Plug.Endpoint, schema: {MyApp.Schema, :schema}
+  ```
+
+  You may want to look at how `GraphQL.Plug` configures its pipeline.
+  Specifically note how `Plug.Parsers` are configured, as this is required
+  for pre-parsing the various POST bodies depending on `content-type`.
+
+  This plug currently includes _GraphiQL_ support but this should end
+  up in it's own plug.
+  """
+
   import Plug.Conn
   alias Plug.Conn
 

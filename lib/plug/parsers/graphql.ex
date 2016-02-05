@@ -1,6 +1,13 @@
 defmodule Plug.Parsers.GRAPHQL do
   @moduledoc """
-  Parses a GraphQL request body.
+  Parses a GraphQL request body when the content-type
+  is set to `application/graphql`.
+
+  Mount it as a custom `Plug.Parser` by passing the atom `:graphql` to `Plug.Parsers`:
+
+  ```elixir
+  plug Plug.Parsers, parsers: [:graphql], pass: ["*/*"]
+  ```
 
   An empty request body is parsed as an empty map.
   """
