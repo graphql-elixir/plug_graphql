@@ -46,7 +46,7 @@ defmodule GraphQL.Plug.Endpoint do
     evaluated_root_value = evaluate_root_value(conn, root_value)
 
     cond do
-      query && use_graphiql?(conn) ->
+      use_graphiql?(conn) ->
         handle_graphiql_call(conn, schema, evaluated_root_value, query, variables, operation_name)
       query ->
         handle_call(conn, schema, evaluated_root_value, query, variables, operation_name)
@@ -67,6 +67,13 @@ defmodule GraphQL.Plug.Endpoint do
 
   defp escape_newlines(s) do
     String.replace(s, ~r/\n/, "\\n")
+  end
+
+  defp handle_graphiql_call(conn, _, _, nil, _, _) do
+    graphiql = graphiql_html("0.4.5", "", "", "")
+    conn
+    |> put_resp_content_type("text/html")
+    |> send_resp(200, graphiql)
   end
 
   defp handle_graphiql_call(conn, schema, root_value, query, variables, operation_name) do
