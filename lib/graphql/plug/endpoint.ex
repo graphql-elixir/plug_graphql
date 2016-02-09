@@ -70,7 +70,7 @@ defmodule GraphQL.Plug.Endpoint do
   end
 
   defp handle_graphiql_call(conn, _, _, nil, _, _) do
-    graphiql = graphiql_html("0.4.5", "", "", "")
+    graphiql = graphiql_html(graphiql_version, "", "", "")
     conn
     |> put_resp_content_type("text/html")
     |> send_resp(200, graphiql)
@@ -80,7 +80,7 @@ defmodule GraphQL.Plug.Endpoint do
     {:ok, data} = GraphQL.execute(schema, query, root_value, variables, operation_name)
     {:ok, variables} = Poison.encode(variables, pretty: true)
     {:ok, result}    = Poison.encode(data, pretty: true)
-    graphiql = graphiql_html("0.4.9", escape_newlines(query), escape_newlines(variables), escape_newlines(result))
+    graphiql = graphiql_html(graphiql_version, escape_newlines(query), escape_newlines(variables), escape_newlines(result))
     conn
     |> put_resp_content_type("text/html")
     |> send_resp(200, graphiql)
@@ -154,5 +154,9 @@ defmodule GraphQL.Plug.Endpoint do
       _ ->
         false
     end
+  end
+
+  def graphiql_version do
+    "0.4.9"
   end
 end
