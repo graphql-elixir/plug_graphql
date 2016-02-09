@@ -70,7 +70,7 @@ defmodule GraphQL.Plug.Endpoint do
   end
 
   defp handle_graphiql_call(conn, _, _, nil, _, _) do
-    graphiql = graphiql_html("0.4.5", "", "", "")
+    graphiql = graphiql_html("0.4.9", "", "", "")
     conn
     |> put_resp_content_type("text/html")
     |> send_resp(200, graphiql)
