@@ -19,6 +19,8 @@ defmodule GraphQL.Plug do
 
   use Plug.Builder
 
+  require Logger
+
   plug Plug.Parsers,
     parsers: [:graphql, :urlencoded, :multipart, :json],
     pass: ["*/*"],
@@ -39,7 +41,17 @@ defmodule GraphQL.Plug do
   end
 
   def call(conn, opts) do
+    # TODO use private
     conn = assign(conn, :graphql_options, opts)
-    super(conn, opts)
+    conn = super(conn, opts)
+
+    # TODO consider not logging instrospection queries
+    Logger.debug """
+    Processed GraphQL query:
+
+    #{conn.params["query"]}
+    """
+
+    conn
   end
 end
