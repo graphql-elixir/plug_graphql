@@ -22,6 +22,24 @@ defmodule GraphQL.Plug.Endpoint do
 
   @behaviour Plug
 
+  @graphiql_version "0.4.9"
+  @graphiql_instructions """
+  # Welcome to GraphQL Elixir!
+  #
+  # GraphiQL is an in-browser IDE for writing, validating, and
+  # testing GraphQL queries.
+  #
+  # Type queries into this side of the screen, and you will
+  # see intelligent typeaheads aware of the current GraphQL type schema and
+  # live syntax and validation errors highlighted within the text.
+  #
+  # To bring up the auto-complete at any point, just press Ctrl-Space.
+  #
+  # Press the run button above, or Cmd-Enter to execute the query, and the result
+  # will appear in the pane to the right.
+
+  """
+
   # Load GraphiQL HTML view
   require EEx
   EEx.function_from_file :defp, :graphiql_html,
@@ -69,18 +87,12 @@ defmodule GraphQL.Plug.Endpoint do
     String.replace(s, ~r/\n/, "\\n")
   end
 
-  defp handle_graphiql_call(conn, _, _, nil, _, _) do
-    graphiql = graphiql_html("0.4.5", "", "", "")
-    conn
-    |> put_resp_content_type("text/html")
-    |> send_resp(200, graphiql)
-  end
-
   defp handle_graphiql_call(conn, schema, root_value, query, variables, operation_name) do
+    query = query || @graphiql_instructions
     {:ok, data} = GraphQL.execute(schema, query, root_value, variables, operation_name)
     {:ok, variables} = Poison.encode(variables, pretty: true)
     {:ok, result}    = Poison.encode(data, pretty: true)
-    graphiql = graphiql_html("0.4.9", escape_newlines(query), escape_newlines(variables), escape_newlines(result))
+    graphiql = graphiql_html(@graphiql_version, escape_newlines(query), escape_newlines(variables), escape_newlines(result))
     conn
     |> put_resp_content_type("text/html")
     |> send_resp(200, graphiql)
