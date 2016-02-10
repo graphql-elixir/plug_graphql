@@ -37,7 +37,6 @@ defmodule GraphQL.Plug.Endpoint do
   #
   # Press the run button above, or Cmd-Enter to execute the query, and the result
   # will appear in the pane to the right.
-
   """
 
   # Load GraphiQL HTML view
@@ -83,16 +82,19 @@ defmodule GraphQL.Plug.Endpoint do
     |> execute(schema, root_value, query, variables, operation_name)
   end
 
-  defp escape_newlines(s) do
-    String.replace(s, ~r/\n/, "\\n")
+  defp escape_string(s) do
+    s
+    |> String.replace(~r/\n/, "\\n")
+    |> String.replace(~r/'/, "\\'")
   end
 
   defp handle_graphiql_call(conn, schema, root_value, query, variables, operation_name) do
-    query = query || @graphiql_instructions
-    {:ok, data} = GraphQL.execute(schema, query, root_value, variables, operation_name)
+    # TODO construct a simple query from the schema (ie `schema.query.fields[0].fields[0..5]`)
+    query = query || @graphiql_instructions <> "\n{\n\tfield\n}\n"
+    {_, data} = GraphQL.execute(schema, query, root_value, variables, operation_name)
     {:ok, variables} = Poison.encode(variables, pretty: true)
     {:ok, result}    = Poison.encode(data, pretty: true)
-    graphiql = graphiql_html(@graphiql_version, escape_newlines(query), escape_newlines(variables), escape_newlines(result))
+    graphiql = graphiql_html(@graphiql_version, escape_string(query), escape_string(variables), escape_string(result))
     conn
     |> put_resp_content_type("text/html")
     |> send_resp(200, graphiql)
