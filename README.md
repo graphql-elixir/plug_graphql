@@ -33,7 +33,7 @@ This [Plug](https://github.com/elixir-lang/plug) allows you to easily mount a Gr
     end
 
     def deps do
-      [{:plug_graphql, "~> 0.1.4"}]
+      [{:plug_graphql, "~> 0.1.5"}]
     end
     ```
 

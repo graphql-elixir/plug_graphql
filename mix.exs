@@ -1,7 +1,7 @@
 defmodule GraphQL.Plug.Mixfile do
   use Mix.Project
 
-  @version "0.1.4"
+  @version "0.1.5"
 
   @description "A Plug integration for GraphQL Elixir"
   @repo_url "https://github.com/joshprice/plug_graphql"
@@ -11,7 +11,7 @@ defmodule GraphQL.Plug.Mixfile do
     [app: :plug_graphql,
      description: @description,
      version: @version,
-     elixir: "~> 1.0",
+     elixir: "~> 1.1",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      package: package,
@@ -29,11 +29,11 @@ defmodule GraphQL.Plug.Mixfile do
      {:cowboy, "~> 1.0"},
      {:plug, "~> 0.14 or ~> 1.0"},
      {:poison, "~> 1.5"},
-     {:graphql, "~> 0.1.1"}]
+     {:graphql, "~> 0.1.2"}]
   end
 
   defp package do
-    [maintainers: ["Josh Price"],
+    [maintainers: ["Josh Price", "Aaron Weiker"],
      licenses: ["BSD"],
      links: %{github: @repo_url},
      files: ~w(lib templates mix.exs *.md LICENSE)]
