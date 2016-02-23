@@ -28,7 +28,7 @@ defmodule GraphQL.Plug.Mixfile do
      {:ex_doc, "~> 0.11", only: :dev},
      {:cowboy, "~> 1.0"},
      {:plug, "~> 0.14 or ~> 1.0"},
-     {:poison, "~> 1.5"},
+     {:poison, "~> 2.1"},
      {:graphql, "~> 0.1.2"}]
   end
 
