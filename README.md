@@ -50,6 +50,11 @@ This [Plug](https://github.com/elixir-lang/plug) allows you to easily mount a Gr
             fields: %{
               greeting: %{
                 type: %GraphQL.Type.String{},
+                args: %{
+                  name: %{
+                    type: %GraphQL.Type.String{}
+                  }
+                },
                 resolve: {TestSchema, :greeting}
               }
             }
