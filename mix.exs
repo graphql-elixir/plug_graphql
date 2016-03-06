@@ -4,7 +4,7 @@ defmodule GraphQL.Plug.Mixfile do
   @version "0.1.5"
 
   @description "A Plug integration for GraphQL Elixir"
-  @repo_url "https://github.com/joshprice/plug_graphql"
+  @repo_url "https://github.com/graphql-elixir/plug_graphql"
   @docs_url "http://graphql-elixir.org"
 
   def project do

@@ -1,13 +1,13 @@
 # GraphQL Plug
 
-[![Build Status](https://travis-ci.org/joshprice/plug_graphql.svg)](https://travis-ci.org/joshprice/plug_graphql)
+[![Build Status](https://travis-ci.org/graphql-elixir/plug_graphql.svg)](https://travis-ci.org/graphql-elixir/plug_graphql)
 [![Public Slack Discussion](https://graphql-slack.herokuapp.com/badge.svg)](https://graphql-slack.herokuapp.com/)
 
-`plug_graphql` is a [Plug](https://github.com/elixir-lang/plug) integration for the [GraphQL Elixir](https://github.com/joshprice/graphql-elixir) implementation of Facebook's GraphQL.
+`plug_graphql` is a [Plug](https://github.com/elixir-lang/plug) integration for the [GraphQL Elixir](https://github.com/graphql-elixir/graphql-elixir) implementation of Facebook's GraphQL.
 
 This [Plug](https://github.com/elixir-lang/plug) allows you to easily mount a GraphQL endpoint in Phoenix. This example project shows you how:
 
-* [Phoenix GraphQL example project](https://github.com/joshprice/hello_graphql_phoenix)
+* [Phoenix GraphQL example project](https://github.com/graphql-elixir/hello_graphql_phoenix)
 
 
 ## Installation
@@ -20,7 +20,7 @@ This [Plug](https://github.com/elixir-lang/plug) allows you to easily mount a Gr
     ```
 
     ```sh
-    git clone https://github.com/joshprice/hello_graphql_phoenix
+    git clone https://github.com/graphql-elixir/hello_graphql_phoenix
     ```
 
   2. Add `plug_graphql` to your list of dependencies and applications in `mix.exs` and install the package with `mix deps.get`.
