@@ -26,13 +26,8 @@ defmodule GraphQL.Plug do
     pass: ["*/*"],
     json_decoder: Poison
 
-  # plug GraphQL.Plug.Endpoint
-
-  # TODO extract
-  # plug GraphQL.Plug.GraphiQL
-
   def init(opts) do
-    GraphQL.Plug.BareEndpoint.init(opts)
+    GraphQL.Plug.Endpoint.init(opts)
   end
 
   def call(conn, opts) do
@@ -41,9 +36,9 @@ defmodule GraphQL.Plug do
     conn = super(conn, opts)
 
     conn = if allow_graphiql? do
-      GraphQL.Plug.Endpoint.call(conn, opts)
+      GraphQL.Plug.GraphiQL.call(conn, opts)
     else
-      GraphQL.Plug.BareEndpoint.call(conn, opts)
+      GraphQL.Plug.Endpoint.call(conn, opts)
     end
 
     # TODO consider not logging instrospection queries

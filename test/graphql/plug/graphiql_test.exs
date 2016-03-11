@@ -1,4 +1,4 @@
-defmodule GraphQL.Plug.BareEndpointTest do
+defmodule GraphQL.Plug.GraphiQLTest do
   use ExUnit.Case, async: true
   use Plug.Test
   import ExUnit.TestHelpers
@@ -31,7 +31,7 @@ defmodule GraphQL.Plug.BareEndpointTest do
   defmodule TestPlug do
     use Plug.Builder
 
-    plug GraphQL.Plug.BareEndpoint, schema: {TestSchema, :schema}
+    plug GraphQL.Plug.GraphiQL, schema: {TestSchema, :schema}
   end
 
   test "GET and POST successful query" do

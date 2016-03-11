@@ -19,37 +19,18 @@ defmodule GraphQL.Plug.Endpoint do
 
   import Plug.Conn
   alias Plug.Conn
-  alias GraphQL.Plug.BareEndpoint
   alias GraphQL.Plug.RootValue
   alias GraphQL.Plug.Parameters
 
   @behaviour Plug
 
-  @graphiql_version "0.4.9"
-  @graphiql_instructions """
-  # Welcome to GraphQL Elixir!
-  #
-  # GraphiQL is an in-browser IDE for writing, validating, and
-  # testing GraphQL queries.
-  #
-  # Type queries into this side of the screen, and you will
-  # see intelligent typeaheads aware of the current GraphQL type schema and
-  # live syntax and validation errors highlighted within the text.
-  #
-  # To bring up the auto-complete at any point, just press Ctrl-Space.
-  #
-  # Press the run button above, or Cmd-Enter to execute the query, and the result
-  # will appear in the pane to the right.
-  """
-
-  # Load GraphiQL HTML view
-  require EEx
-  EEx.function_from_file :defp, :graphiql_html,
-    Path.absname(Path.relative_to_cwd("templates/graphiql.eex")),
-    [:graphiql_version, :query, :variables, :result]
-
   def init(opts) do
-    BareEndpoint.init(opts)
+    schema = case Keyword.get(opts, :schema) do
+      {mod, func} -> apply(mod, func, [])
+      s -> s
+    end
+    root_value = Keyword.get(opts, :root_value, %{})
+    %{schema: schema, root_value: root_value}
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
@@ -61,45 +42,42 @@ defmodule GraphQL.Plug.Endpoint do
     evaluated_root_value = RootValue.evaluate(conn, root_value)
 
     cond do
-      use_graphiql?(conn) ->
-        handle_graphiql_call(conn, schema, evaluated_root_value, query, variables, operation_name)
       query ->
-        BareEndpoint.handle_call(conn, schema, evaluated_root_value, query, variables, operation_name)
+        handle_call(conn, schema, evaluated_root_value, query, variables, operation_name)
       true ->
-        BareEndpoint.handle_error(conn, "Must provide query string.")
+        handle_error(conn, "Must provide query string.")
     end
   end
 
   def call(%Conn{method: _} = conn, _) do
-    BareEndpoint.handle_error(conn, "GraphQL only supports GET and POST requests.")
+    handle_error(conn, "GraphQL only supports GET and POST requests.")
   end
 
-  defp escape_string(s) do
-    s
-    |> String.replace(~r/\n/, "\\n")
-    |> String.replace(~r/'/, "\\'")
-  end
-
-  defp handle_graphiql_call(conn, schema, root_value, query, variables, operation_name) do
-    # TODO construct a simple query from the schema (ie `schema.query.fields[0].fields[0..5]`)
-    query = query || @graphiql_instructions <> "\n{\n\tfield\n}\n"
-    {_, data} = GraphQL.execute(schema, query, root_value, variables, operation_name)
-    {:ok, variables} = Poison.encode(variables, pretty: true)
-    {:ok, result}    = Poison.encode(data, pretty: true)
-
-    graphiql = graphiql_html(@graphiql_version, escape_string(query), escape_string(variables), escape_string(result))
+  def handle_error(conn, message) do
+    {:ok, errors} = Poison.encode %{errors: [%{message: message}]}
     conn
-    |> put_resp_content_type("text/html")
-    |> send_resp(200, graphiql)
+    |> put_resp_content_type("application/json")
+    |> send_resp(400, errors)
   end
 
-  defp use_graphiql?(conn) do
-    case get_req_header(conn, "accept") do
-      [accept_header | _] ->
-        String.contains?(accept_header, "text/html") &&
-        !Map.has_key?(conn.params, "raw")
-      _ ->
-        false
+  def handle_call(conn, schema, root_value, query, variables, operation_name) do
+    conn
+    |> put_resp_content_type("application/json")
+    |> execute(schema, root_value, query, variables, operation_name)
+  end
+
+  defp execute(conn, schema, root_value, query, variables, operation_name) do
+    case GraphQL.execute(schema, query, root_value, variables, operation_name) do
+      {:ok, data} ->
+        case Poison.encode(data) do
+          {:ok, json}      -> send_resp(conn, 200, json)
+          {:error, errors} -> send_resp(conn, 400, errors)
+        end
+      {:error, errors} ->
+        case Poison.encode(errors) do
+          {:ok, json}      -> send_resp(conn, 400, json)
+          {:error, errors} -> send_resp(conn, 400, errors)
+        end
     end
   end
 end
