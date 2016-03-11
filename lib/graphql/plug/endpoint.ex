@@ -19,6 +19,9 @@ defmodule GraphQL.Plug.Endpoint do
 
   import Plug.Conn
   alias Plug.Conn
+  alias GraphQL.Plug.BareEndpoint
+  alias GraphQL.Plug.RootValue
+  alias GraphQL.Plug.Parameters
 
   @behaviour Plug
 
@@ -46,40 +49,29 @@ defmodule GraphQL.Plug.Endpoint do
     [:graphiql_version, :query, :variables, :result]
 
   def init(opts) do
-    schema = case Keyword.get(opts, :schema) do
-      {mod, func} -> apply(mod, func, [])
-      s -> s
-    end
-    root_value = Keyword.get(opts, :root_value, %{})
-    %{schema: schema, root_value: root_value}
+    BareEndpoint.init(opts)
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
     %{schema: schema, root_value: root_value} = conn.assigns[:graphql_options] || opts
 
-    query = query(conn)
-    variables = variables(conn)
-    operation_name = operation_name(conn)
-    evaluated_root_value = evaluate_root_value(conn, root_value)
+    query = Parameters.query(conn)
+    variables = Parameters.variables(conn)
+    operation_name = Parameters.operation_name(conn)
+    evaluated_root_value = RootValue.evaluate(conn, root_value)
 
     cond do
       use_graphiql?(conn) ->
         handle_graphiql_call(conn, schema, evaluated_root_value, query, variables, operation_name)
       query ->
-        handle_call(conn, schema, evaluated_root_value, query, variables, operation_name)
+        BareEndpoint.handle_call(conn, schema, evaluated_root_value, query, variables, operation_name)
       true ->
-        handle_error(conn, "Must provide query string.")
+        BareEndpoint.handle_error(conn, "Must provide query string.")
     end
   end
 
   def call(%Conn{method: _} = conn, _) do
-    handle_error(conn, "GraphQL only supports GET and POST requests.")
-  end
-
-  defp handle_call(conn, schema, root_value, query, variables, operation_name) do
-    conn
-    |> put_resp_content_type("application/json")
-    |> execute(schema, root_value, query, variables, operation_name)
+    BareEndpoint.handle_error(conn, "GraphQL only supports GET and POST requests.")
   end
 
   defp escape_string(s) do
@@ -94,70 +86,11 @@ defmodule GraphQL.Plug.Endpoint do
     {_, data} = GraphQL.execute(schema, query, root_value, variables, operation_name)
     {:ok, variables} = Poison.encode(variables, pretty: true)
     {:ok, result}    = Poison.encode(data, pretty: true)
+
     graphiql = graphiql_html(@graphiql_version, escape_string(query), escape_string(variables), escape_string(result))
     conn
     |> put_resp_content_type("text/html")
     |> send_resp(200, graphiql)
-  end
-
-  defp handle_error(conn, message) do
-    {:ok, errors} = Poison.encode %{errors: [%{message: message}]}
-    conn
-    |> put_resp_content_type("application/json")
-    |> send_resp(400, errors)
-  end
-
-  defp execute(conn, schema, root_value, query, variables, operation_name) do
-    case GraphQL.execute(schema, query, root_value, variables, operation_name) do
-      {:ok, data} ->
-        case Poison.encode(data) do
-          {:ok, json}      -> send_resp(conn, 200, json)
-          {:error, errors} -> send_resp(conn, 400, errors)
-        end
-      {:error, errors} ->
-        case Poison.encode(errors) do
-          {:ok, json}      -> send_resp(conn, 400, json)
-          {:error, errors} -> send_resp(conn, 400, errors)
-        end
-    end
-  end
-
-  defp evaluate_root_value(conn, {mod, func}) do
-    apply(mod, func, [conn])
-  end
-
-  defp evaluate_root_value(conn, root_fn) when is_function(root_fn, 1) do
-    apply(root_fn, [conn])
-  end
-
-  defp evaluate_root_value(_, nil) do
-    %{}
-  end
-
-  defp evaluate_root_value(_, root_value) do
-    root_value
-  end
-
-  defp query(conn) do
-    query = Map.get(conn.params, "query")
-    if query && String.strip(query) != "", do: query, else: nil
-  end
-
-  defp variables(conn) do
-    decode_variables Map.get(conn.params, "variables", %{})
-  end
-
-  defp decode_variables(variables) when is_binary(variables) do
-    case Poison.decode(variables) do
-      {:ok, variables} -> variables
-      {:error, _} -> %{} # express-graphql ignores these errors currently
-    end
-  end
-  defp decode_variables(vars), do: vars
-
-  defp operation_name(conn) do
-    Map.get(conn.params, "operationName") ||
-    Map.get(conn.params, "operation_name")
   end
 
   defp use_graphiql?(conn) do
