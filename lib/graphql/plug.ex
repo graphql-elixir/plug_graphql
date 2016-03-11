@@ -27,7 +27,9 @@ defmodule GraphQL.Plug do
     json_decoder: Poison
 
   def init(opts) do
-    GraphQL.Plug.Endpoint.init(opts)
+    opts
+    |> GraphQL.Plug.Endpoint.init
+    |> allow_graphiql?
   end
 
   def call(conn, opts) do
@@ -35,7 +37,7 @@ defmodule GraphQL.Plug do
     conn = assign(conn, :graphql_options, opts)
     conn = super(conn, opts)
 
-    conn = if allow_graphiql? do
+    conn = if opts.allow_graphiql? do
       GraphQL.Plug.GraphiQL.call(conn, opts)
     else
       GraphQL.Plug.Endpoint.call(conn, opts)
@@ -51,8 +53,9 @@ defmodule GraphQL.Plug do
     conn
   end
 
-  defp allow_graphiql? do
+  defp allow_graphiql?(opts) do
     config = Application.get_env(:plug_graphql, __MODULE__, [])
-    Keyword.get(config, :allow_graphiql, false)
+    allow? = Keyword.get(config, :allow_graphiql, false)
+    Map.merge(opts, %{allow_graphiql?: allow?})
   end
 end
