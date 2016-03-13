@@ -16,11 +16,10 @@ defmodule GraphQL.Plug.GraphiQL do
   This plug currently includes _GraphiQL_ support but this should end
   up in it's own plug.
   """
-
   import Plug.Conn
   alias Plug.Conn
   alias GraphQL.Plug.Endpoint
-  alias GraphQL.Plug.RootValue
+  alias GraphQL.Plug.FunctionalValue
   alias GraphQL.Plug.Parameters
 
   @behaviour Plug
@@ -49,16 +48,16 @@ defmodule GraphQL.Plug.GraphiQL do
     [:graphiql_version, :query, :variables, :result]
 
   def init(opts) do
-    Endpoint.init(opts)
+    GraphQL.Plug.init(opts)
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
-    %{schema: schema, root_value: root_value} = conn.assigns[:graphql_options] || opts
+    %{schema: schema, root_value: root_value, query: query} = conn.assigns[:graphql_options] || opts
 
-    query = Parameters.query(conn)
+    query = Parameters.query(conn) || FunctionalValue.evaluate(conn, query, nil)
     variables = Parameters.variables(conn)
     operation_name = Parameters.operation_name(conn)
-    evaluated_root_value = RootValue.evaluate(conn, root_value)
+    evaluated_root_value = FunctionalValue.evaluate(conn, root_value, %{})
 
     cond do
       use_graphiql?(conn) ->
@@ -83,6 +82,7 @@ defmodule GraphQL.Plug.GraphiQL do
   defp handle_graphiql_call(conn, schema, root_value, query, variables, operation_name) do
     # TODO construct a simple query from the schema (ie `schema.query.fields[0].fields[0..5]`)
     query = query || @graphiql_instructions <> "\n{\n\tfield\n}\n"
+
     {_, data} = GraphQL.execute(schema, query, root_value, variables, operation_name)
     {:ok, variables} = Poison.encode(variables, pretty: true)
     {:ok, result}    = Poison.encode(data, pretty: true)
@@ -93,13 +93,17 @@ defmodule GraphQL.Plug.GraphiQL do
     |> send_resp(200, graphiql)
   end
 
-  defp use_graphiql?(conn) do
-    case get_req_header(conn, "accept") do
+  def use_graphiql?(%Conn{method: "GET"} = conn) do
+    accept_headers = get_req_header(conn, "accept")
+
+    case accept_headers do
       [accept_header | _] ->
+        IO.inspect accept_header
         String.contains?(accept_header, "text/html") &&
         !Map.has_key?(conn.params, "raw")
       _ ->
         false
     end
   end
+  def use_graphiql?(_), do: false
 end

@@ -19,27 +19,22 @@ defmodule GraphQL.Plug.Endpoint do
 
   import Plug.Conn
   alias Plug.Conn
-  alias GraphQL.Plug.RootValue
+  alias GraphQL.Plug.FunctionalValue
   alias GraphQL.Plug.Parameters
 
   @behaviour Plug
 
   def init(opts) do
-    schema = case Keyword.get(opts, :schema) do
-      {mod, func} -> apply(mod, func, [])
-      s -> s
-    end
-    root_value = Keyword.get(opts, :root_value, %{})
-    %{schema: schema, root_value: root_value}
+    GraphQL.Plug.init(opts)
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
-    %{schema: schema, root_value: root_value} = conn.assigns[:graphql_options] || opts
+    %{schema: schema, root_value: root_value, query: query} = conn.assigns[:graphql_options] || opts
 
-    query = Parameters.query(conn)
+    query = Parameters.query(conn) || FunctionalValue.evaluate(conn, query, nil)
     variables = Parameters.variables(conn)
     operation_name = Parameters.operation_name(conn)
-    evaluated_root_value = RootValue.evaluate(conn, root_value)
+    evaluated_root_value = FunctionalValue.evaluate(conn, root_value, %{})
 
     cond do
       query ->
