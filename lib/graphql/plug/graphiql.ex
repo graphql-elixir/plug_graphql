@@ -19,7 +19,7 @@ defmodule GraphQL.Plug.GraphiQL do
   import Plug.Conn
   alias Plug.Conn
   alias GraphQL.Plug.Endpoint
-  alias GraphQL.Plug.FunctionalValue
+  alias GraphQL.Plug.ConfigurableValue
   alias GraphQL.Plug.Parameters
 
   @behaviour Plug
@@ -48,19 +48,36 @@ defmodule GraphQL.Plug.GraphiQL do
     [:graphiql_version, :query, :variables, :result]
 
   def init(opts) do
-    GraphQL.Plug.init(opts)
+    # NOTE: This code needs to be kept in sync with GraphQL.Plug,
+    #       GraphQL.Plug.GraphiQL and GraphQL.Plugs.Endpoint as the
+    #       returned data structure is shared amongst each other.
+    schema = case Keyword.get(opts, :schema) do
+      {mod, func} -> apply(mod, func, [])
+      s -> s
+    end
+
+    root_value = Keyword.get(opts, :root_value, %{})
+    query = Keyword.get(opts, :query, nil)
+    allow_graphiql? = Keyword.get(opts, :allow_graphiql?, false)
+
+    %{
+      schema: schema,
+      root_value: root_value,
+      query: query,
+      allow_graphiql?: allow_graphiql?
+    }
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
     %{schema: schema, root_value: root_value, query: query} = conn.assigns[:graphql_options] || opts
 
-    query = Parameters.query(conn) || FunctionalValue.evaluate(conn, query, nil)
+    query = Parameters.query(conn) || ConfigurableValue.evaluate(conn, query, nil)
     variables = Parameters.variables(conn)
     operation_name = Parameters.operation_name(conn)
-    evaluated_root_value = FunctionalValue.evaluate(conn, root_value, %{})
+    evaluated_root_value = ConfigurableValue.evaluate(conn, root_value, %{})
 
     cond do
-      use_graphiql?(conn) ->
+      use_graphiql?(conn, opts) ->
         handle_graphiql_call(conn, schema, evaluated_root_value, query, variables, operation_name)
       query ->
         Endpoint.handle_call(conn, schema, evaluated_root_value, query, variables, operation_name)
@@ -93,17 +110,15 @@ defmodule GraphQL.Plug.GraphiQL do
     |> send_resp(200, graphiql)
   end
 
-  def use_graphiql?(%Conn{method: "GET"} = conn) do
-    accept_headers = get_req_header(conn, "accept")
-
-    case accept_headers do
+  def use_graphiql?(%Conn{method: "GET"}, %{allow_graphiql?: false}), do: false
+  def use_graphiql?(%Conn{method: "GET"} = conn, %{allow_graphiql?: true}) do
+    case get_req_header(conn, "accept") do
       [accept_header | _] ->
-        IO.inspect accept_header
         String.contains?(accept_header, "text/html") &&
         !Map.has_key?(conn.params, "raw")
       _ ->
         false
     end
   end
-  def use_graphiql?(_), do: false
+  def use_graphiql?(_, _), do: false
 end

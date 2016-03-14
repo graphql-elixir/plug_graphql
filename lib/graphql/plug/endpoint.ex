@@ -12,29 +12,41 @@ defmodule GraphQL.Plug.Endpoint do
   You may want to look at how `GraphQL.Plug` configures its pipeline.
   Specifically note how `Plug.Parsers` are configured, as this is required
   for pre-parsing the various POST bodies depending on `content-type`.
-
-  This plug currently includes _GraphiQL_ support but this should end
-  up in it's own plug.
   """
 
   import Plug.Conn
   alias Plug.Conn
-  alias GraphQL.Plug.FunctionalValue
+  alias GraphQL.Plug.ConfigurableValue
   alias GraphQL.Plug.Parameters
 
   @behaviour Plug
 
   def init(opts) do
-    GraphQL.Plug.init(opts)
+    # NOTE: This code needs to be kept in sync with GraphQL.Plug,
+    #       GraphQL.Plug.GraphiQL and GraphQL.Plugs.Endpoint as the
+    #       returned data structure is shared amongst each other.
+    schema = case Keyword.get(opts, :schema) do
+      {mod, func} -> apply(mod, func, [])
+      s -> s
+    end
+
+    root_value = Keyword.get(opts, :root_value, %{})
+    query = Keyword.get(opts, :query, nil)
+
+    %{
+      schema: schema,
+      root_value: root_value,
+      query: query
+    }
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
     %{schema: schema, root_value: root_value, query: query} = conn.assigns[:graphql_options] || opts
 
-    query = Parameters.query(conn) || FunctionalValue.evaluate(conn, query, nil)
+    query = Parameters.query(conn) || ConfigurableValue.evaluate(conn, query, nil)
     variables = Parameters.variables(conn)
     operation_name = Parameters.operation_name(conn)
-    evaluated_root_value = FunctionalValue.evaluate(conn, root_value, %{})
+    evaluated_root_value = ConfigurableValue.evaluate(conn, root_value, %{})
 
     cond do
       query ->
@@ -66,7 +78,7 @@ defmodule GraphQL.Plug.Endpoint do
       {:ok, data} ->
         case Poison.encode(data) do
           {:ok, json}      -> send_resp(conn, 200, json)
-          {:error, errors} -> send_resp(conn, 400, errors)
+          {:error, errors} -> send_resp(conn, 500, errors)
         end
       {:error, errors} ->
         case Poison.encode(errors) do

@@ -26,7 +26,18 @@ defmodule GraphQL.Plug do
     pass: ["*/*"],
     json_decoder: Poison
 
+  @type init :: %{
+    schema: GraphQL.Schema.t,
+    root_value: ConfigurableValue.t,
+    query:  ConfigurableValue.t,
+    allow_graphiql?: true | false
+  }
+
+  @spec init(Map) :: init
   def init(opts) do
+    # NOTE: This code needs to be kept in sync with GraphQL.Plug,
+    #       GraphQL.Plug.GraphiQL and GraphQL.Plugs.Endpoint as the
+    #       returned data structure is shared amongst each other.
     schema = case Keyword.get(opts, :schema) do
       {mod, func} -> apply(mod, func, [])
       s -> s
@@ -45,11 +56,10 @@ defmodule GraphQL.Plug do
   end
 
   def call(conn, opts) do
-    # TODO use private
     conn = assign(conn, :graphql_options, opts)
     conn = super(conn, opts)
 
-    conn = if opts.allow_graphiql? && GraphQL.Plug.GraphiQL.use_graphiql?(conn) do
+    conn = if GraphQL.Plug.GraphiQL.use_graphiql?(conn, opts) do
       GraphQL.Plug.GraphiQL.call(conn, opts)
     else
       GraphQL.Plug.Endpoint.call(conn, opts)

@@ -126,6 +126,33 @@ defmodule GraphQL.Plug.EndpointTest do
     assert_query TestPlug, {:post, "/", query: "  "}, {400, no_query_found_error}
   end
 
+  test "uses configured query when no query specified" do
+    defmodule TestPlugWithQuery do
+      use Plug.Builder
+      plug GraphQL.Plug.Endpoint, [schema: {TestSchema, :schema}, query: "{greeting}"]
+    end
+
+    success = ~S({"data":{"greeting":"Hello, world!"}})
+    assert_query TestPlugWithQuery, {:get,  "/", nil},         {200, success}
+    assert_query TestPlugWithQuery, {:get,  "/", query: nil},  {200, success}
+    assert_query TestPlugWithQuery, {:get,  "/", query: ""},   {200, success}
+    assert_query TestPlugWithQuery, {:get,  "/", query: "  "}, {200, success}
+  end
+
+  test "executes MF function when configured" do
+    defmodule TestPlugWithMFQuery do
+      use Plug.Builder
+      plug GraphQL.Plug.Endpoint, [schema: {TestSchema, :schema}, query: "{greeting}"]
+      def query(_conn), do: "{greeting}"
+    end
+
+    success = ~S({"data":{"greeting":"Hello, world!"}})
+    assert_query TestPlugWithMFQuery, {:get,  "/", nil},         {200, success}
+    assert_query TestPlugWithMFQuery, {:get,  "/", query: nil},  {200, success}
+    assert_query TestPlugWithMFQuery, {:get,  "/", query: ""},   {200, success}
+    assert_query TestPlugWithMFQuery, {:get,  "/", query: "  "}, {200, success}
+  end
+
   test "invalid query error" do
     syntax_error = ~S({"errors":[{"message":"GraphQL: syntax error before:  on line 1","line_number":1}]})
     assert_query TestPlug, {:get,  "/", query: "{"}, {400, syntax_error}
