@@ -4,6 +4,9 @@ defmodule GraphQL.Plug.ConfigurableValue do
   evaluating configuration options that can be set as
   raw strings, or functions in the form of {_ModuleName_, _:function_}
   or in the syntax of _&ModuleName.function/arity_
+
+  In order for a function to be callable it needs to be
+  an arity of 1 accepting a `Plug.Conn`.
   """
 
   @type t :: {module, atom} | (Plug.Conn.t -> Map) | Map | nil

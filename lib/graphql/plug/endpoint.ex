@@ -24,35 +24,32 @@ defmodule GraphQL.Plug.Endpoint do
   def init(opts) do
     # NOTE: This code needs to be kept in sync with
     #       GraphQL.Plug.GraphiQL and GraphQL.Plugs.Endpoint as the
-    #       returned data structure is shared amongst each other.
+    #       returned data structure is shared.
     schema = case Keyword.get(opts, :schema) do
       {mod, func} -> apply(mod, func, [])
-      s -> s
+      s           -> s
     end
 
-    root_value = Keyword.get(opts, :root_value, %{})
-    query = Keyword.get(opts, :query, nil)
+    root_value    = Keyword.get(opts, :root_value, %{})
+    query         = Keyword.get(opts, :query, nil)
 
     [
-      schema: schema,
+      schema:     schema,
       root_value: root_value,
-      query: query
+      query:      query
     ]
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
-    root_value = opts[:root_value]
-    schema = opts[:schema]
-    query = opts[:query]
-
-    query = Parameters.query(conn) || ConfigurableValue.evaluate(conn, query, nil)
-    variables = Parameters.variables(conn)
-    operation_name = Parameters.operation_name(conn)
-    evaluated_root_value = ConfigurableValue.evaluate(conn, root_value, %{})
+    query           = Parameters.query(conn) ||
+                      ConfigurableValue.evaluate(conn, opts[:query], nil)
+    variables       = Parameters.variables(conn)
+    operation_name  = Parameters.operation_name(conn)
+    root_value      = ConfigurableValue.evaluate(conn, opts[:root_value], %{})
 
     cond do
       query ->
-        handle_call(conn, schema, evaluated_root_value, query, variables, operation_name)
+        handle_call(conn, opts[:schema], root_value, query, variables, operation_name)
       true ->
         handle_error(conn, "Must provide query string.")
     end
@@ -63,7 +60,7 @@ defmodule GraphQL.Plug.Endpoint do
   end
 
   def handle_error(conn, message) do
-    {:ok, errors} = Poison.encode %{errors: [%{message: message}]}
+    {:ok, errors} = Poison.encode(%{errors: [%{message: message}]})
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(400, errors)

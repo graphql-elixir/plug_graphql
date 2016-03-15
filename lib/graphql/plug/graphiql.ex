@@ -51,20 +51,17 @@ defmodule GraphQL.Plug.GraphiQL do
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
-    root_value = opts[:root_value]
-    schema = opts[:schema]
-    query = opts[:query]
-
-    query = Parameters.query(conn) || ConfigurableValue.evaluate(conn, query, nil)
-    variables = Parameters.variables(conn)
-    operation_name = Parameters.operation_name(conn)
-    evaluated_root_value = ConfigurableValue.evaluate(conn, root_value, %{})
+    query           = Parameters.query(conn) ||
+                      ConfigurableValue.evaluate(conn, opts[:query], nil)
+    variables       = Parameters.variables(conn)
+    operation_name  = Parameters.operation_name(conn)
+    root_value      = ConfigurableValue.evaluate(conn, opts[:root_value], %{})
 
     cond do
       use_graphiql?(conn, opts) ->
-        handle_graphiql_call(conn, schema, evaluated_root_value, query, variables, operation_name)
+        handle_graphiql_call(conn, opts[:schema], root_value, query, variables, operation_name)
       query ->
-        Endpoint.handle_call(conn, schema, evaluated_root_value, query, variables, operation_name)
+        Endpoint.handle_call(conn, opts[:schema], root_value, query, variables, operation_name)
       true ->
         Endpoint.handle_error(conn, "Must provide query string.")
     end

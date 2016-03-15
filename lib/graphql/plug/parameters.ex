@@ -20,7 +20,7 @@ defmodule GraphQL.Plug.Parameters do
 
   @spec variables(Plug.Conn.t) :: Map
   def variables(conn) do
-    decode_variables Map.get(conn.params, "variables", %{})
+    decode_variables(Map.get(conn.params, "variables", %{}))
   end
 
   defp cleanup_string(s) do
