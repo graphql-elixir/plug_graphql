@@ -41,7 +41,6 @@ defmodule GraphQL.Plug.Endpoint do
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
-    # %{schema: schema, root_value: root_value, query: query} = opts
     root_value = opts[:root_value]
     schema = opts[:schema]
     query = opts[:query]

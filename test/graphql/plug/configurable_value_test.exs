@@ -42,10 +42,9 @@ defmodule GraphQL.Plug.ConfigurableValueTest do
   end
 
   test "raises error when {mod, fun} is not arity/1" do
-    # TODO: This should have a better error messsage as this is not useful
     assert_raise(
-      UndefinedFunctionError,
-      "undefined function GraphQL.Plug.ConfigurableValueTest.Config.bar/1",
+      RuntimeError,
+      "Configured function must only be arity of 1 that accepts a value of Plug.Conn",
       fn ->
         %{}
         |> ConfigurableValue.evaluate({Config, :bar}, :default)

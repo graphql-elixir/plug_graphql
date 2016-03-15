@@ -1,20 +1,17 @@
 defmodule GraphQL.Plug.GraphiQL do
   @moduledoc """
-  This is the core plug for mounting a GraphQL server.
+  This is the GraphiQL plug for mounting a GraphQL server.
 
   You can build your own pipeline by mounting the
-  `GraphQL.Plug.Endpoint` plug directly.
+  `GraphQL.Plug.GraphiQL` plug directly.
 
   ```elixir
-  forward "/graphql", GraphQL.Plug.Endpoint, schema: {MyApp.Schema, :schema}
+  forward "/graphql", GraphQL.Plug.GraphiQL, schema: {MyApp.Schema, :schema}
   ```
 
   You may want to look at how `GraphQL.Plug` configures its pipeline.
   Specifically note how `Plug.Parsers` are configured, as this is required
   for pre-parsing the various POST bodies depending on `content-type`.
-
-  This plug currently includes _GraphiQL_ support but this should end
-  up in it's own plug.
   """
   import Plug.Conn
   alias Plug.Conn
@@ -24,7 +21,7 @@ defmodule GraphQL.Plug.GraphiQL do
 
   @behaviour Plug
 
-  @graphiql_version "0.4.9"
+  @graphiql_version "0.6.1"
   @graphiql_instructions """
   # Welcome to GraphQL Elixir!
   #
@@ -48,7 +45,7 @@ defmodule GraphQL.Plug.GraphiQL do
     [:graphiql_version, :query, :variables, :result]
 
   def init(opts) do
-    allow_graphiql? = Keyword.get(opts, :allow_graphiql?, false)
+    allow_graphiql? = Keyword.get(opts, :allow_graphiql?, true)
 
     GraphQL.Plug.Endpoint.init(opts) ++ [allow_graphiql?: allow_graphiql?]
   end
@@ -97,9 +94,8 @@ defmodule GraphQL.Plug.GraphiQL do
     |> send_resp(200, graphiql)
   end
 
-  def use_graphiql?(%Conn{method: "GET"}, %{allow_graphiql?: false}), do: false
-  def use_graphiql?(%Conn{method: "GET"} = conn, %{allow_graphiql?: true}) do
-    case get_req_header(conn, "accept") do
+  def use_graphiql?(%Conn{method: "GET"} = conn, opts) do
+    case opts[:allow_graphiql?] && get_req_header(conn, "accept") do
       [accept_header | _] ->
         String.contains?(accept_header, "text/html") &&
         !Map.has_key?(conn.params, "raw")

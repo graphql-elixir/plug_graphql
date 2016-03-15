@@ -9,8 +9,14 @@ defmodule GraphQL.Plug.ConfigurableValue do
   @type t :: {module, atom} | (Plug.Conn.t -> Map) | Map | nil
   @spec evaluate(Plug.Conn.t, t, any) :: Map
 
+  @error_msg "Configured function must only be arity of 1 that accepts a value of Plug.Conn"
+
   def evaluate(conn, {mod, func}, _) do
-    apply(mod, func, [conn])
+    if :erlang.function_exported(mod, func, 1) do
+      apply(mod, func, [conn])
+    else
+      raise @error_msg
+    end
   end
 
   def evaluate(conn, root_fn, _) when is_function(root_fn, 1) do
@@ -18,7 +24,7 @@ defmodule GraphQL.Plug.ConfigurableValue do
   end
 
   def evaluate(_, root_fn, _) when is_function(root_fn) do
-    raise "Configured function must only be arity of 1 that accepts a value of Plug.Conn"
+    raise @error_msg
   end
 
   def evaluate(_, nil, default) do

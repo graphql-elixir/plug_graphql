@@ -35,9 +35,9 @@ defmodule GraphQL.Plug do
 
   @spec init(Map) :: init
   def init(opts) do
-    opts
-    |> GraphQL.Plug.Endpoint.init
-    |> GraphQL.Plug.GraphiQL.init
+    graphiql = GraphQL.Plug.GraphiQL.init(opts)
+    endpoint = GraphQL.Plug.Endpoint.init(opts)
+    Enum.dedup(endpoint ++ graphiql)
   end
 
   def call(conn, opts) do
