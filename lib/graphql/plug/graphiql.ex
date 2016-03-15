@@ -48,28 +48,15 @@ defmodule GraphQL.Plug.GraphiQL do
     [:graphiql_version, :query, :variables, :result]
 
   def init(opts) do
-    # NOTE: This code needs to be kept in sync with GraphQL.Plug,
-    #       GraphQL.Plug.GraphiQL and GraphQL.Plugs.Endpoint as the
-    #       returned data structure is shared amongst each other.
-    schema = case Keyword.get(opts, :schema) do
-      {mod, func} -> apply(mod, func, [])
-      s -> s
-    end
-
-    root_value = Keyword.get(opts, :root_value, %{})
-    query = Keyword.get(opts, :query, nil)
     allow_graphiql? = Keyword.get(opts, :allow_graphiql?, false)
 
-    %{
-      schema: schema,
-      root_value: root_value,
-      query: query,
-      allow_graphiql?: allow_graphiql?
-    }
+    GraphQL.Plug.Endpoint.init(opts) ++ [allow_graphiql?: allow_graphiql?]
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
-    %{schema: schema, root_value: root_value, query: query} = conn.assigns[:graphql_options] || opts
+    root_value = opts[:root_value]
+    schema = opts[:schema]
+    query = opts[:query]
 
     query = Parameters.query(conn) || ConfigurableValue.evaluate(conn, query, nil)
     variables = Parameters.variables(conn)

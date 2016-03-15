@@ -35,28 +35,12 @@ defmodule GraphQL.Plug do
 
   @spec init(Map) :: init
   def init(opts) do
-    # NOTE: This code needs to be kept in sync with GraphQL.Plug,
-    #       GraphQL.Plug.GraphiQL and GraphQL.Plugs.Endpoint as the
-    #       returned data structure is shared amongst each other.
-    schema = case Keyword.get(opts, :schema) do
-      {mod, func} -> apply(mod, func, [])
-      s -> s
-    end
-
-    root_value = Keyword.get(opts, :root_value, %{})
-    query = Keyword.get(opts, :query, nil)
-    allow_graphiql? = Keyword.get(opts, :allow_graphiql?, false)
-
-    %{
-      schema: schema,
-      root_value: root_value,
-      query: query,
-      allow_graphiql?: allow_graphiql?
-    }
+    opts
+    |> GraphQL.Plug.Endpoint.init
+    |> GraphQL.Plug.GraphiQL.init
   end
 
   def call(conn, opts) do
-    conn = assign(conn, :graphql_options, opts)
     conn = super(conn, opts)
 
     conn = if GraphQL.Plug.GraphiQL.use_graphiql?(conn, opts) do

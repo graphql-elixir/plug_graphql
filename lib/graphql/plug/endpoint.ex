@@ -22,7 +22,7 @@ defmodule GraphQL.Plug.Endpoint do
   @behaviour Plug
 
   def init(opts) do
-    # NOTE: This code needs to be kept in sync with GraphQL.Plug,
+    # NOTE: This code needs to be kept in sync with
     #       GraphQL.Plug.GraphiQL and GraphQL.Plugs.Endpoint as the
     #       returned data structure is shared amongst each other.
     schema = case Keyword.get(opts, :schema) do
@@ -33,15 +33,18 @@ defmodule GraphQL.Plug.Endpoint do
     root_value = Keyword.get(opts, :root_value, %{})
     query = Keyword.get(opts, :query, nil)
 
-    %{
+    [
       schema: schema,
       root_value: root_value,
       query: query
-    }
+    ]
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
-    %{schema: schema, root_value: root_value, query: query} = conn.assigns[:graphql_options] || opts
+    # %{schema: schema, root_value: root_value, query: query} = opts
+    root_value = opts[:root_value]
+    schema = opts[:schema]
+    query = opts[:query]
 
     query = Parameters.query(conn) || ConfigurableValue.evaluate(conn, query, nil)
     variables = Parameters.variables(conn)
