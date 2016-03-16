@@ -26,24 +26,30 @@ defmodule GraphQL.Plug do
     pass: ["*/*"],
     json_decoder: Poison
 
-  plug GraphQL.Plug.Endpoint
-  # TODO extract
-  # plug GraphQL.Plug.GraphiQL
+  @type init :: %{
+    schema: GraphQL.Schema.t,
+    root_value: ConfigurableValue.t,
+    query:  ConfigurableValue.t,
+    allow_graphiql?: true | false
+  }
 
-  # TODO remove duplication call GraphQL.Plug.Helper.extract_init_options/1 here
+  @spec init(Map) :: init
   def init(opts) do
-    schema = case Keyword.get(opts, :schema) do
-      {mod, func} -> apply(mod, func, [])
-      s -> s
-    end
-    root_value = Keyword.get(opts, :root_value, %{})
-    %{:schema => schema, :root_value => root_value}
+    graphiql = GraphQL.Plug.GraphiQL.init(opts)
+    endpoint = GraphQL.Plug.Endpoint.init(opts)
+
+    Keyword.merge(graphiql, endpoint)
+    |> Enum.dedup
   end
 
   def call(conn, opts) do
-    # TODO use private
-    conn = assign(conn, :graphql_options, opts)
     conn = super(conn, opts)
+
+    conn = if GraphQL.Plug.GraphiQL.use_graphiql?(conn, opts) do
+      GraphQL.Plug.GraphiQL.call(conn, opts)
+    else
+      GraphQL.Plug.Endpoint.call(conn, opts)
+    end
 
     # TODO consider not logging instrospection queries
     Logger.debug """
