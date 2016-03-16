@@ -37,7 +37,9 @@ defmodule GraphQL.Plug do
   def init(opts) do
     graphiql = GraphQL.Plug.GraphiQL.init(opts)
     endpoint = GraphQL.Plug.Endpoint.init(opts)
-    Enum.dedup(endpoint ++ graphiql)
+
+    Keyword.merge(graphiql, endpoint)
+    |> Enum.dedup
   end
 
   def call(conn, opts) do

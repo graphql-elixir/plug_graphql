@@ -17,7 +17,7 @@ defmodule GraphQL.Plug.GraphiQL do
   alias Plug.Conn
   alias GraphQL.Plug.Endpoint
   alias GraphQL.Plug.ConfigurableValue
-  alias GraphQL.Plug.Parameters
+  alias GraphQL.Plug.Parameter
 
   @behaviour Plug
 
@@ -51,10 +51,10 @@ defmodule GraphQL.Plug.GraphiQL do
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
-    query           = Parameters.query(conn) ||
+    query           = Parameter.query(conn) ||
                       ConfigurableValue.evaluate(conn, opts[:query], nil)
-    variables       = Parameters.variables(conn)
-    operation_name  = Parameters.operation_name(conn)
+    variables       = Parameter.variables(conn)
+    operation_name  = Parameter.operation_name(conn)
     root_value      = ConfigurableValue.evaluate(conn, opts[:root_value], %{})
 
     cond do

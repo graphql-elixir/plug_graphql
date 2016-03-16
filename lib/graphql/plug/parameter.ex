@@ -1,7 +1,7 @@
-defmodule GraphQL.Plug.Parameters do
+defmodule GraphQL.Plug.Parameter do
   @moduledoc """
-  This module provides the functions for parsing out parameters
-  from a `Plug.Conn`
+  This module provides the functions for parsing out a parameter
+  value from `Plug.Conn`
   """
 
   @spec operation_name(Plug.Conn.t) :: String.t
