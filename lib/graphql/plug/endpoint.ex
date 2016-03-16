@@ -55,7 +55,10 @@ defmodule GraphQL.Plug.Endpoint do
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
-    %{schema: schema, root_value: root_value} = conn.assigns[:graphql_options] || opts
+    if conn.assigns[:graphql_options] do
+      opts = Map.merge(opts, conn.assigns[:graphql_options])
+    end
+    %{schema: schema, root_value: root_value} = opts
 
     query = query(conn)
     variables = variables(conn)
