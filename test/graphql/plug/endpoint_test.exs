@@ -23,8 +23,9 @@ defmodule GraphQL.Plug.EndpointTest do
       }
     end
 
-    def greeting(_, %{name: name}, _), do: "Hello, #{name}!"
     def greeting(%{greeting: name}, _, _), do: "Hello, #{name}!"
+    def greeting(_, %{name: name}, _), do: "Hello, #{name}!"
+    def greeting(_, _, %{root_value: %{name: name}}), do: "Hello, #{name}!"
     def greeting(_, _, _), do: greeting(%{}, %{name: "world"}, %{})
   end
 
@@ -70,6 +71,26 @@ defmodule GraphQL.Plug.EndpointTest do
 
     success = ~S({"data":{"greeting":"Hello, MF!"}})
     assert_query TestRootPlugWithMF, {:get, "/", query: "{greeting}"}, {200, success}
+  end
+
+  test "root data can be set in conn and made available in resolve context" do
+    defmodule TestRootPlugWithConn do
+      use Plug.Builder
+      defmodule ConnTest do
+        import Plug.Conn
+        def init(default), do: default
+
+        def call(conn, _default) do
+          assign(conn, :graphql_options, %{ root_value: %{ name: "Conn" } })
+        end
+      end
+
+      plug ConnTest
+      plug GraphQL.Plug.Endpoint, [schema: {TestSchema, :schema}]
+    end
+
+    success = ~S({"data":{"greeting":"Hello, Conn!"}})
+    assert_query TestRootPlugWithConn, {:get, "/", query: "{greeting}"}, {200, success}
   end
 
   test "GET with variables" do
