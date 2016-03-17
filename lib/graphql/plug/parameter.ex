@@ -32,9 +32,9 @@ defmodule GraphQL.Plug.Parameter do
     Map.get(conn.params, "operation_name")
   end
 
-  defp decode_variables(variables) when is_binary(variables) do
-    case Poison.decode(variables) do
-      {:ok, variables} -> variables
+  defp decode_variables(values) when is_binary(values) do
+    case Poison.decode(values) do
+      {:ok, values} -> values
       {:error, _} -> %{} # express-graphql ignores these errors currently
     end
   end

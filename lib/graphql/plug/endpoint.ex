@@ -47,12 +47,7 @@ defmodule GraphQL.Plug.Endpoint do
     operation_name  = Parameter.operation_name(conn)
     root_value      = ConfigurableValue.evaluate(conn, opts[:root_value], %{})
 
-    cond do
-      query ->
-        handle_call(conn, opts[:schema], root_value, query, variables, operation_name)
-      true ->
-        handle_error(conn, "Must provide query string.")
-    end
+    handle_call(conn, opts[:schema], root_value, query, variables, operation_name)
   end
 
   def call(%Conn{method: _} = conn, _) do
@@ -66,6 +61,9 @@ defmodule GraphQL.Plug.Endpoint do
     |> send_resp(400, errors)
   end
 
+  def handle_call(conn, _, _, nil, _, _) do
+    handle_error(conn, "Must provide query string.")
+  end
   def handle_call(conn, schema, root_value, query, variables, operation_name) do
     conn
     |> put_resp_content_type("application/json")
