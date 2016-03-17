@@ -4,21 +4,23 @@ defmodule GraphQL.Plug.Parameter do
   value from `Plug.Conn`
   """
 
-  @spec operation_name(Plug.Conn.t) :: String.t
+  alias Plug.Conn
+
+  @spec operation_name(Conn.t) :: String.t
   def operation_name(conn) do
     conn
     |> operation_name_params
     |> cleanup_string
   end
 
-  @spec query(Plug.Conn.t) :: String.t | nil
+  @spec query(Conn.t) :: String.t | nil
   def query(conn) do
     conn.params
     |> Map.get("query")
     |> cleanup_string
   end
 
-  @spec variables(Plug.Conn.t) :: Map
+  @spec variables(Conn.t) :: Map
   def variables(conn) do
     decode_variables(Map.get(conn.params, "variables", %{}))
   end

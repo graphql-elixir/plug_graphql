@@ -9,8 +9,10 @@ defmodule GraphQL.Plug.ConfigurableValue do
   an arity of 1 accepting a `Plug.Conn`.
   """
 
-  @type t :: {module, atom} | (Plug.Conn.t -> Map) | Map | nil
-  @spec evaluate(Plug.Conn.t, t, any) :: Map
+  alias Plug.Conn
+
+  @type t :: {module, atom} | (Conn.t -> Map) | Map | nil
+  @spec evaluate(Conn.t, t, any) :: Map
 
   @error_msg "Configured function must only be arity of 1 that accepts a value of Plug.Conn"
 
