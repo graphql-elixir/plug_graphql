@@ -28,7 +28,7 @@ defmodule GraphQL.Plug.Mixfile do
      {:dogma, "~> 0.1", only: :dev},
      {:earmark, "~> 0.1", only: :dev},
      {:ex_doc, "~> 0.11", only: :dev},
-     {:mix_test_watch, only: :dev},
+     {:mix_test_watch, "~> 0.2", only: :dev},
      {:cowboy, "~> 1.0"},
      {:plug, "~> 0.14 or ~> 1.0"},
      {:poison, "~> 1.5 or ~> 2.0", override: true},

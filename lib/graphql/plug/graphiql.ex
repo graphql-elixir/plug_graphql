@@ -16,8 +16,6 @@ defmodule GraphQL.Plug.GraphiQL do
   import Plug.Conn
   alias Plug.Conn
   alias GraphQL.Plug.Endpoint
-  alias GraphQL.Plug.ConfigurableValue
-  alias GraphQL.Plug.Parameter
 
   @behaviour Plug
 
@@ -47,23 +45,16 @@ defmodule GraphQL.Plug.GraphiQL do
   def init(opts) do
     allow_graphiql? = Keyword.get(opts, :allow_graphiql?, true)
 
-    GraphQL.Plug.Endpoint.init(opts) ++ [allow_graphiql?: allow_graphiql?]
+    Endpoint.init(opts) ++ [allow_graphiql?: allow_graphiql?]
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
-    query           = Parameter.query(conn) ||
-                      ConfigurableValue.evaluate(conn, opts[:query], nil)
-    variables       = Parameter.variables(conn)
-    operation_name  = Parameter.operation_name(conn)
-    root_value      = ConfigurableValue.evaluate(conn, opts[:root_value], %{})
+    args = Endpoint.extract_arguments(conn, opts)
 
-    cond do
-      use_graphiql?(conn, opts) ->
-        handle_graphiql_call(conn, opts[:schema], root_value, query, variables, operation_name)
-      query ->
-        Endpoint.handle_call(conn, opts[:schema], root_value, query, variables, operation_name)
-      true ->
-        Endpoint.handle_error(conn, "Must provide query string.")
+    if use_graphiql?(conn, opts) do
+        handle_call(conn, args)
+    else
+        Endpoint.handle_call(conn, args)
     end
   end
 
@@ -77,12 +68,12 @@ defmodule GraphQL.Plug.GraphiQL do
     |> String.replace(~r/'/, "\\'")
   end
 
-  defp handle_graphiql_call(conn, schema, root_value, query, variables, operation_name) do
+  defp handle_call(conn, args) do
     # TODO construct a simple query from the schema (ie `schema.query.fields[0].fields[0..5]`)
-    query = query || @graphiql_instructions <> "\n{\n\tfield\n}\n"
+    query = args.query || @graphiql_instructions <> "\n{\n\tfield\n}\n"
 
-    {_, data} = GraphQL.execute(schema, query, root_value, variables, operation_name)
-    {:ok, variables} = Poison.encode(variables, pretty: true)
+    {_, data} = GraphQL.execute(args.schema, query, args.root_value, args.variables, args.operation_name)
+    {:ok, variables} = Poison.encode(args.variables, pretty: true)
     {:ok, result}    = Poison.encode(data, pretty: true)
 
     graphiql = graphiql_html(@graphiql_version, escape_string(query), escape_string(variables), escape_string(result))
