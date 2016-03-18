@@ -18,16 +18,19 @@ defmodule GraphQL.Plug do
   """
 
   use Plug.Builder
+  alias GraphQL.Schema
+  alias GraphQL.Plug.{GraphiQL, Endpoint}
+  alias Plug.Parsers
 
   require Logger
 
-  plug Plug.Parsers,
+  plug Parsers,
     parsers: [:graphql, :urlencoded, :multipart, :json],
     pass: ["*/*"],
     json_decoder: Poison
 
   @type init :: %{
-    schema: GraphQL.Schema.t,
+    schema: Schema.t,
     root_value: ConfigurableValue.t,
     query:  ConfigurableValue.t,
     allow_graphiql?: true | false
@@ -35,20 +38,20 @@ defmodule GraphQL.Plug do
 
   @spec init(Map) :: init
   def init(opts) do
-    graphiql = GraphQL.Plug.GraphiQL.init(opts)
-    endpoint = GraphQL.Plug.Endpoint.init(opts)
+    graphiql = GraphiQL.init(opts)
+    endpoint = Endpoint.init(opts)
 
-    Keyword.merge(graphiql, endpoint)
-    |> Enum.dedup
+    opts = Keyword.merge(graphiql, endpoint)
+    Enum.dedup(opts)
   end
 
   def call(conn, opts) do
     conn = super(conn, opts)
 
-    conn = if GraphQL.Plug.GraphiQL.use_graphiql?(conn, opts) do
-      GraphQL.Plug.GraphiQL.call(conn, opts)
+    conn = if GraphiQL.use_graphiql?(conn, opts) do
+      GraphiQL.call(conn, opts)
     else
-      GraphQL.Plug.Endpoint.call(conn, opts)
+      Endpoint.call(conn, opts)
     end
 
     # TODO consider not logging instrospection queries

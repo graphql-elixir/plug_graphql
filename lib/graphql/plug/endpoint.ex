@@ -41,22 +41,28 @@ defmodule GraphQL.Plug.Endpoint do
   end
 
   def call(%Conn{method: m} = conn, opts) when m in ["GET", "POST"] do
+    args = extract_arguments(conn, opts)
+    handle_call(conn, args)
+  end
+
+  def call(%Conn{method: _} = conn, _) do
+    handle_error(conn, "GraphQL only supports GET and POST requests.")
+  end
+
+  def extract_arguments(conn, opts) do
     query           = Parameter.query(conn) ||
                       ConfigurableValue.evaluate(conn, opts[:query], nil)
     variables       = Parameter.variables(conn)
     operation_name  = Parameter.operation_name(conn)
     root_value      = ConfigurableValue.evaluate(conn, opts[:root_value], %{})
 
-    cond do
-      query ->
-        handle_call(conn, opts[:schema], root_value, query, variables, operation_name)
-      true ->
-        handle_error(conn, "Must provide query string.")
-    end
-  end
-
-  def call(%Conn{method: _} = conn, _) do
-    handle_error(conn, "GraphQL only supports GET and POST requests.")
+    %{
+      query:          query,
+      variables:      variables,
+      operation_name: operation_name,
+      root_value:     root_value,
+      schema:         opts[:schema]
+    }
   end
 
   def handle_error(conn, message) do
@@ -66,14 +72,17 @@ defmodule GraphQL.Plug.Endpoint do
     |> send_resp(400, errors)
   end
 
-  def handle_call(conn, schema, root_value, query, variables, operation_name) do
+  def handle_call(conn, %{query: nil}) do
+    handle_error(conn, "Must provide query string.")
+  end
+  def handle_call(conn, args) do
     conn
     |> put_resp_content_type("application/json")
-    |> execute(schema, root_value, query, variables, operation_name)
+    |> execute(args)
   end
 
-  defp execute(conn, schema, root_value, query, variables, operation_name) do
-    case GraphQL.execute(schema, query, root_value, variables, operation_name) do
+  defp execute(conn, args) do
+    case GraphQL.execute(args.schema, args.query, args.root_value, args.variables, args.operation_name) do
       {:ok, data} ->
         case Poison.encode(data) do
           {:ok, json}      -> send_resp(conn, 200, json)
