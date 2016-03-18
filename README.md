@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/graphql-elixir/plug_graphql.svg)](https://travis-ci.org/graphql-elixir/plug_graphql)
 [![Public Slack Discussion](https://graphql-slack.herokuapp.com/badge.svg)](https://graphql-slack.herokuapp.com/)
 
-`plug_graphql` is a [Plug](https://github.com/elixir-lang/plug) integration for the [GraphQL Elixir](https://github.com/graphql-elixir/graphql-elixir) implementation of Facebook's GraphQL.
+`plug_graphql` is a [Plug](https://github.com/elixir-lang/plug) integration for the [GraphQL Elixir](https://github.com/graphql-elixir/graphql) implementation of Facebook's GraphQL.
 
 This [Plug](https://github.com/elixir-lang/plug) allows you to easily mount a GraphQL endpoint in Phoenix. This example project shows you how:
 
