@@ -155,7 +155,7 @@ defmodule GraphQL.Plug.CommonTest do
   end
 
   test "GET with variables ignores invalid variables string", context do
-    success = ~S({"data":{"greeting":"Hello, !"}})
+    success = ~S({"data":{"greeting":"Hello, world!"}})
     query = "query hi($name: String) { greeting(name: $name) }"
 
     Enum.map(context.plugs, fn(test_plug) ->
