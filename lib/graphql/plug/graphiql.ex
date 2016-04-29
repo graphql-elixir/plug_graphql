@@ -19,7 +19,7 @@ defmodule GraphQL.Plug.GraphiQL do
 
   @behaviour Plug
 
-  @graphiql_version "0.6.1"
+  @graphiql_version "0.7.0"
   @graphiql_instructions """
   # Welcome to GraphQL Elixir!
   #
@@ -40,7 +40,7 @@ defmodule GraphQL.Plug.GraphiQL do
   require EEx
   EEx.function_from_file :defp, :graphiql_html,
     Path.absname(Path.relative_to_cwd("templates/graphiql.eex")),
-    [:graphiql_version, :query, :variables, :result]
+    [:graphiql_version, :query, :variables, :result, :operation_name]
 
   def init(opts) do
     allow_graphiql? = Keyword.get(opts, :allow_graphiql?, true)
@@ -62,6 +62,9 @@ defmodule GraphQL.Plug.GraphiQL do
     Endpoint.handle_error(conn, "GraphQL only supports GET and POST requests.")
   end
 
+  defp escape_string(nil) do
+    ""
+  end
   defp escape_string(s) do
     s
     |> String.replace(~r/\n/, "\\n")
@@ -76,7 +79,7 @@ defmodule GraphQL.Plug.GraphiQL do
     {:ok, variables} = Poison.encode(args.variables, pretty: true)
     {:ok, result}    = Poison.encode(data, pretty: true)
 
-    graphiql = graphiql_html(@graphiql_version, escape_string(query), escape_string(variables), escape_string(result))
+    graphiql = graphiql_html(@graphiql_version, escape_string(query), escape_string(variables), escape_string(result), escape_string(args.operation_name))
     conn
     |> put_resp_content_type("text/html")
     |> send_resp(200, graphiql)
