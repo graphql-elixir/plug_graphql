@@ -47,20 +47,20 @@ defmodule GraphQL.Plug do
 
   def call(conn, opts) do
     conn = super(conn, opts)
+    interactive? = GraphiQL.use_graphiql?(conn, opts)
+    case interactive? do
+      true ->
+        conn |> GraphiQL.call(opts)
+        # TODO consider not logging instrospection queries
+        Logger.debug """
+        Processed GraphQL query:
 
-    conn = if GraphiQL.use_graphiql?(conn, opts) do
-      GraphiQL.call(conn, opts)
-    else
-      Endpoint.call(conn, opts)
+        #{conn.params["query"]}
+        """
+      false ->
+        conn |> Endpoint.call(opts)
     end
-
-    # TODO consider not logging instrospection queries
-    Logger.debug """
-    Processed GraphQL query:
-
-    #{conn.params["query"]}
-    """
-
+    
     conn
   end
 end
