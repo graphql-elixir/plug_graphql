@@ -1,7 +1,7 @@
 defmodule GraphQL.Plug.Mixfile do
   use Mix.Project
 
-  @version "0.2.0"
+  @version "0.3.0"
 
   @description "A Plug integration for GraphQL Elixir"
   @repo_url "https://github.com/graphql-elixir/plug_graphql"
@@ -33,7 +33,7 @@ defmodule GraphQL.Plug.Mixfile do
      {:cowboy, "~> 1.0"},
      {:plug, "~> 0.14 or ~> 1.0"},
      {:poison, "~> 1.5 or ~> 2.0"},
-     {:graphql, "~> 0.2"}]
+     {:graphql, "~> 0.3"}]
   end
 
   defp package do
