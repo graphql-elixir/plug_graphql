@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.1 (2016-05-30)
+## 0.3.1 (2016-06-01)
 
 * Enhancements
   * Upgrade to GraphiQL 0.7.1
