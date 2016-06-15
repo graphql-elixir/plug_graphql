@@ -19,7 +19,7 @@ defmodule GraphQL.Plug.GraphiQL do
 
   @behaviour Plug
 
-  @graphiql_version "0.7.1"
+  @graphiql_version "0.7.2"
   @graphiql_instructions """
   # Welcome to GraphQL Elixir!
   #
