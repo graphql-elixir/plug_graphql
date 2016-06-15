@@ -91,7 +91,7 @@ add "&raw" to the end of the URL within a browser.
       function graphQLFetcher(graphQLParams) {
         // NOTE: This fetch URL should be relative to the current URL
         // This is so that the GraphQL Elixir Plug can be mounted anywhere
-        return fetch('', {
+        return fetch(window.location.origin + window.location.pathname, {
           method: 'post',
           headers: {
             'Accept': 'application/json',
