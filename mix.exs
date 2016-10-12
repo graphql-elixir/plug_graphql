@@ -32,7 +32,7 @@ defmodule GraphQL.Plug.Mixfile do
 
      {:cowboy, "~> 1.0"},
      {:plug, "~> 0.14 or ~> 1.0"},
-     {:poison, "~> 1.5 or ~> 2.0"},
+     {:poison, "~> 1.5 or ~> 2.0 or ~> 3.0"},
      {:graphql, "~> 0.3"}]
   end
 
