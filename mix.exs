@@ -14,8 +14,9 @@ defmodule GraphQL.Plug.Mixfile do
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     package: package,
-     deps: deps,
+     package: package(),
+     deps: deps(),
+     homepage_url: @docs_url,
      docs: [main: "readme", extras: ["README.md"]]]
   end
 
