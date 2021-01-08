@@ -9,97 +9,96 @@ This [Plug](https://github.com/elixir-lang/plug) allows you to easily mount a Gr
 
 * [Phoenix GraphQL example project](https://github.com/graphql-elixir/hello_graphql_phoenix)
 
-
 ## Installation
 
   1. Make a new Phoenix app, or add it to your existing app.
 
-    ```sh
-    mix phoenix.new hello_graphql
-    cd hello_graphql
-    ```
+  ```sh
+  mix phoenix.new hello_graphql
+  cd hello_graphql
+  ```
 
-    ```sh
-    git clone https://github.com/graphql-elixir/hello_graphql_phoenix
-    ```
+  ```sh
+  git clone https://github.com/graphql-elixir/hello_graphql_phoenix
+  ```
 
   2. Add `plug_graphql` to your list of dependencies and applications in `mix.exs` and install the package with `mix deps.get`.
 
-    ```elixir
-    def application do
-      # Add the application to your list of applications.
-      # This will ensure that it will be included in a release.
-      [applications: [:logger, :plug_graphql]]
-    end
+  ```elixir
+  def application do
+    # Add the application to your list of applications.
+    # This will ensure that it will be included in a release.
+    [applications: [:logger, :plug_graphql]]
+  end
 
-    def deps do
-      [{:plug_graphql, "~> 0.3.1"}]
-    end
-    ```
+  def deps do
+    [{:plug_graphql, "~> 0.3.1"}]
+  end
+  ```
 
 ## Usage
 
   1. Define a simple schema in `web/graphql/test_schema.ex`:
 
-    ```elixir
-    defmodule TestSchema do
-      def schema do
-        %GraphQL.Schema{
-          query: %GraphQL.Type.ObjectType{
-            name: "Hello",
-            fields: %{
-              greeting: %{
-                type: %GraphQL.Type.String{},
-                args: %{
-                  name: %{
-                    type: %GraphQL.Type.String{}
-                  }
-                },
-                resolve: {TestSchema, :greeting}
-              }
+  ```elixir
+  defmodule TestSchema do
+    def schema do
+      %GraphQL.Schema{
+        query: %GraphQL.Type.ObjectType{
+          name: "Hello",
+          fields: %{
+            greeting: %{
+              type: %GraphQL.Type.String{},
+              args: %{
+                name: %{
+                  type: %GraphQL.Type.String{}
+                }
+              },
+              resolve: {TestSchema, :greeting}
             }
           }
         }
-      end
-
-      def greeting(_, %{name: name}, _), do: "Hello, #{name}!"
-      def greeting(_, _, _), do: "Hello, world!"
+      }
     end
-    ```
+
+    def greeting(_, %{name: name}, _), do: "Hello, #{name}!"
+    def greeting(_, _, _), do: "Hello, world!"
+  end
+  ```
 
   2. Your `api` pipeline should have this as a minimum:
 
-    ```elixir
-    pipeline :api do
-      plug :accepts, ["json"]
-    end
-    ```
+  ```elixir
+  pipeline :api do
+    plug :accepts, ["json"]
+  end
+  ```
 
   3. Mount the GraphQL endpoint as follows:
 
-    ```elixir
-    scope "/api" do
-      pipe_through :api
+  ```elixir
+  scope "/api" do
+    pipe_through :api
 
-      forward "/", GraphQL.Plug, schema: {TestSchema, :schema}
-    end
-    ```
+    forward "/", GraphQL.Plug, schema: {TestSchema, :schema}
+  end
+  ```
 
   4. Start Phoenix
 
-    ```sh
-    mix phoenix.server
-    ```
+  ```sh
+  mix phoenix.server
+  ```
 
   5. Open your browser to `http://localhost:4000/api?query={greeting}` and you should see something like this:
 
-    ```json
-    {
-      "data": {
-        "greeting": "Hello, world!"
-      }
+  ```json
+  {
+    "data": {
+      "greeting": "Hello, world!"
     }
-    ```
+  }
+  ```
 
 ## Contributions
 
@@ -118,3 +117,4 @@ Thanks and appreciation goes to the following contributors for PRs, discussions,
 * James Hiscock (https://github.com/bockit)
 
 Thanks also to everyone who has submitted PRs, logged issues, given feedback or asked questions.
+
